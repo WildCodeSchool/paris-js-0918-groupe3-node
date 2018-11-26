@@ -1,32 +1,30 @@
-//imports
+/**** imports *****/
 const express = require('express');
 const app = express();
 const connection = require('./config');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3002;
 
-// use
+/**** modules use *****/
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
   extended: true
 }));
 
-//routes
+/**** routers *****/
 
-app.get('/api/questions', (req, res) => {
-  connection.query('SELECT text, is_custom FROM questions WHERE is_custom=false', (err, results) => {
-    if (err) {
-      res.status(500).send(`Erreur serveur : ${err}`);
-    } else {
-      res.json(results);
-    }
-  })
-})
+const questions = require('./routers/questions');
+const offers = require('./routers/offers');
 
-//launch
+/**** routes *****/
+
+app.use('/api/questions', questions);
+app.use('/api/offers', offers);
+
+/**** listen *****/
 app.listen(port, (err) => {
   if (err) {
     throw new Error('Connection impossible');
