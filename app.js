@@ -1,7 +1,6 @@
 /**** imports *****/
 const express = require('express');
 const app = express();
-const connection = require('./config');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 
@@ -18,11 +17,13 @@ app.use(bodyParser.urlencoded({
 
 const questions = require('./routers/questions');
 const offers = require('./routers/offers');
+const answers = require('./routers/answers');
 
 /**** routes *****/
 
 app.use('/api/questions', questions);
 app.use('/api/offers', offers);
+app.use('/api/answers', answers);
 
 /**** listen *****/
 app.listen(port, (err) => {
