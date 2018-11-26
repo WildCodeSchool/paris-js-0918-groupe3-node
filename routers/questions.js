@@ -8,7 +8,7 @@ const today = new Date();
  * Sends original questions only.
  */
 router.get('/originals', (req, res) => {
-  const sql = `SELECT text, is_custom FROM questions WHERE is_custom=false`;
+  const sql = `SELECT id, text FROM questions WHERE is_custom=false`;
   connection.query(sql, (err, results) => {
     if (err) {
       res.status(500).send(`Erreur serveur : ${err}`);

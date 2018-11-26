@@ -25,12 +25,12 @@ DROP TABLE IF EXISTS `answers`;
 CREATE TABLE `answers` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `text` text NOT NULL,
-  `created_at` date NOT NULL,
-  `updated_at` date NOT NULL,
+  `file_link` varchar(255) NOT NULL,
   `id_candidates` int(11) NOT NULL,
   `id_questions` int(11) NOT NULL,
-  `file_link` varchar(255) NOT NULL,
   `id_offers` int(11) NOT NULL,
+  `created_at` date NOT NULL,
+  `updated_at` date NOT NULL,
   PRIMARY KEY (`id`),
   KEY `fk_id_candidates_answers` (`id_candidates`),
   KEY `fk_id_offers_answers` (`id_offers`),
@@ -150,16 +150,17 @@ CREATE TABLE `offers` (
   `title` varchar(100) NOT NULL,
   `description` text NOT NULL,
   `contract_type` varchar(15) NOT NULL,
+  `place` varchar(50) NOT NULL,
   `is_active` tinyint(1) NOT NULL,
+  `is_published` tinyint(1) NOT NULL,
   `valid_until` date NOT NULL,
   `created_at` date NOT NULL,
   `updated_at` date NOT NULL,
   `id_companies` int(11) NOT NULL,
-  `is_published` tinyint(1) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `fk_id_companies_offers` (`id_companies`),
   CONSTRAINT `fk_id_companies_offers` FOREIGN KEY (`id_companies`) REFERENCES `offers` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -168,6 +169,7 @@ CREATE TABLE `offers` (
 
 LOCK TABLES `offers` WRITE;
 /*!40000 ALTER TABLE `offers` DISABLE KEYS */;
+INSERT INTO `offers` VALUES (1,'Developpeur Node.js','dev compétent','CDI','paris',1,1,'2019-01-23','2018-11-23','2018-11-23',1),(2,'Balayeur ultra diplomé','Bac +42, Zoulou et tchèque courant','Stage','lyon',1,1,'2019-01-23','2018-11-23','2018-11-23',1),(3,'Balayeur ultra diplomé','Bac +42, Zoulou et tchèque courant','CDD','paris',1,1,'2019-01-23','2018-11-23','2018-11-23',1),(4,'Balayeur ultra diplomé','Bac +42, Zoulou et tchèque courant','CDI','tokyo',1,1,'2019-01-23','2018-11-23','2018-11-23',1),(5,'Balayeur ultra diplomé','Bac +42, Zoulou et tchèque courant','Stage','Oulan Bator',1,1,'2019-01-23','2018-11-23','2018-11-23',2),(6,'Balayeur ultra diplomé','Bac +42, Zoulou et tchèque courant','Stage','Oulan Bator',1,1,'2019-01-23','2018-11-23','2018-11-23',3),(7,'Chanteur de blues','et buveur de bière','CDD','paris',1,1,'2019-01-23','2018-11-23','2018-11-23',3),(8,'prof de maths','dans une ZEP','CDD','paris',1,1,'2019-01-23','2018-11-23','2018-11-23',6),(9,'Caissier','Chez Franprix','CDD','paris',1,1,'2019-01-24','2018-11-24','2018-11-24',2),(10,'Jongleur','avec des couteaux','CDI','Rio',1,1,'2019-01-24','2018-11-24','2018-11-24',2),(11,'Grutier','Port du casque obligatoire','CDD','Paris',1,1,'2019-01-24','2018-11-24','2018-11-24',2),(12,'Skatteur','Olympique','Stage','Moscou',1,1,'2019-01-24','2018-11-24','2018-11-24',2),(13,'Skatteur','Olympique','Stage','Moscou',1,1,'2019-01-24','2018-11-24','2018-11-24',2),(14,'Skatteur','Olympique','Stage','Moscou',1,1,'2019-01-24','2018-11-24','2018-11-24',2),(26,'Moniteur de plongée','dans les caraibes','CDI','Guadeloupe',1,1,'2019-01-25','2018-11-25','2018-11-25',12),(29,'Moniteur de plongée','dans les caraibes','CDI','Guadeloupe',1,1,'2019-01-25','2018-11-25','2018-11-25',12),(31,'Moniteur de plongée','dans les caraibes','CDI','Guadeloupe',1,1,'2019-01-25','2018-11-25','2018-11-25',12),(32,'Récéptionniste','travaille 60h par semaine, 7j/7 SMIC ou moins selon profil','CDI','Paris',1,1,'2019-01-25','2018-11-25','2018-11-25',3),(33,'Récéptionniste','travaille 60h par semaine, 7j/7 SMIC ou moins selon profil','CDI','Paris',1,1,'2019-01-25','2018-11-25','2018-11-25',3),(36,'Developpeur React','ljhjebckjbzj','CDD','paris',1,1,'2019-01-26','2018-11-26','2018-11-26',1);
 /*!40000 ALTER TABLE `offers` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -181,7 +183,6 @@ DROP TABLE IF EXISTS `offers_questions`;
 CREATE TABLE `offers_questions` (
   `id_offers` int(11) NOT NULL,
   `id_questions` int(11) NOT NULL,
-  PRIMARY KEY (`id_offers`),
   KEY `fk_id_questions` (`id_questions`),
   KEY `id_offers` (`id_offers`),
   CONSTRAINT `fk_id_offers` FOREIGN KEY (`id_offers`) REFERENCES `offers` (`id`),
@@ -195,6 +196,7 @@ CREATE TABLE `offers_questions` (
 
 LOCK TABLES `offers_questions` WRITE;
 /*!40000 ALTER TABLE `offers_questions` DISABLE KEYS */;
+INSERT INTO `offers_questions` VALUES (26,1),(26,2),(26,3),(26,4),(26,5),(26,6),(29,1),(29,3),(31,1),(31,3),(33,3),(33,1),(33,2),(33,5),(33,6),(36,1),(36,2),(36,3);
 /*!40000 ALTER TABLE `offers_questions` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -212,7 +214,7 @@ CREATE TABLE `questions` (
   `created_at` date NOT NULL,
   `updated_at` date NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -221,6 +223,7 @@ CREATE TABLE `questions` (
 
 LOCK TABLES `questions` WRITE;
 /*!40000 ALTER TABLE `questions` DISABLE KEYS */;
+INSERT INTO `questions` VALUES (1,'Une réalisation, perso ou pro, dont vous êtes fier-e et qui servirait pour ce job.',0,'2018-11-23','2018-11-23'),(2,'A votre avis, qu’est-ce qui pourrait être amélioré dans notre entreprise ?',0,'2018-11-23','2018-11-23'),(3,'Quel a été votre « plus bel échec » ?',0,'2018-11-23','2018-11-23'),(4,'Trois mois après votre embauche, on fait le point. Et voilà ce que vous avez apporté…',0,'2018-11-23','2018-11-23'),(5,'Pour vous, être heureux dans son travail, c’est quoi ? Le salaire ? L’équipe ? La possibilité d’évoluer ? La machine à café ?',0,'2018-11-23','2018-11-23'),(6,'Vous avez quelque chose à nous dire, un élément à nous envoyer pour nous convaincre ? Allez-y !',0,'2018-11-23','2018-11-23'),(12,'Hello world ?',1,'2018-11-23','2018-11-23'),(13,'Comment ça va ?',1,'2018-11-23','2018-11-23'),(14,'une question',1,'2018-11-24','2018-11-24'),(15,'une question',1,'2018-11-24','2018-11-24'),(16,'une question',1,'2018-11-25','2018-11-25'),(17,'une question',1,'2018-11-25','2018-11-25'),(18,'une question',1,'2018-11-25','2018-11-25'),(19,'une question',1,'2018-11-25','2018-11-25'),(20,'skcjbekjfb',1,'2018-11-26','2018-11-26');
 /*!40000 ALTER TABLE `questions` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -233,4 +236,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-11-23 16:29:18
+-- Dump completed on 2018-11-26 17:32:00
