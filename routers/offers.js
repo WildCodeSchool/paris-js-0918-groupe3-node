@@ -87,7 +87,11 @@ router.get("/", (req, res) => {
   });
 });
 
-router.get("/details/:id_offers", (req, res) => {
+
+/**
+ * Sends details of an offer from its id and adds the questions ids of the offer
+ */
+router.get('/details/:id_offers', (req, res) => {
   const sqlOffer = `
     SELECT title, description, contract_type, place, id_companies
     FROM offers
