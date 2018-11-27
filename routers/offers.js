@@ -2,7 +2,6 @@
 const express = require("express");
 const connection = require("../config");
 const router = express.Router();
-const today = new Date();
 
 /**
  * Posts a new offer for the company,
@@ -23,8 +22,8 @@ router.post("/:id_companies", (req, res) => {
     is_active: true,
     id_companies: req.params.id_companies,
     valid_until: validUntil,
-    created_at: today,
-    updated_at: today
+    created_at: new Date(),
+    updated_at: new Date()
   };
   const formData = Object.assign(fixData, req.body);
 

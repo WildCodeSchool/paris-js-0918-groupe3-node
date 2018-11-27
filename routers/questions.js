@@ -2,7 +2,6 @@
 const express = require('express');
 const connection = require('../config');
 const router = express.Router();
-const today = new Date();
 
 /**
  * Sends original questions only.
@@ -40,8 +39,8 @@ router.post('/', (req, res) => {
     id: null,
     text: req.body.text,
     is_custom: true,
-    created_at: today,
-    updated_at: today
+    created_at: new Date(),
+    updated_at: new Date()
   }
   const sql = `INSERT INTO questions SET ?`;
 

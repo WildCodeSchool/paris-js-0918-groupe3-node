@@ -2,7 +2,6 @@
 const express = require("express");
 const connection = require("../config");
 const router = express.Router();
-const today = new Date();
 
 /**
  * Allows to post answers for questions of an offer
@@ -15,8 +14,8 @@ router.post("/answer/:id_candidates", (req, res) => {
     ...req.query,
     id_candidates: req.params.id_candidates,
     id: null,
-    created_at: today,
-    updated_at: today
+    created_at: new Date(),
+    updated_at: new Date()
   };
   const { id_offers, id_questions } = req.query;
   const sql = `INSERT INTO answers SET ?`;
