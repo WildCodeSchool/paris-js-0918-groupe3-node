@@ -17,15 +17,15 @@ app.use(bodyParser.urlencoded({
 
 const questions = require('./routers/questions');
 const offers = require('./routers/offers');
-const answers = require('./routers/answers');
 const companies = require('./routers/companies');
+const applications = require('./routers/applications');
 
 /**** routes *****/
 
 app.use('/api/questions', questions);
 app.use('/api/offers', offers);
-app.use('/api/answers', answers);
 app.use('/api/companies', companies);
+app.use('/api/applications', applications);
 
 /**** listen *****/
 app.listen(port, (err) => {
