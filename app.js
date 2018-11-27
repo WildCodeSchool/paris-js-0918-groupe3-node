@@ -17,12 +17,14 @@ app.use(bodyParser.urlencoded({
 
 const questions = require('./routers/questions');
 const offers = require('./routers/offers');
+const companies = require('./routers/companies');
 const applications = require('./routers/applications');
 
 /**** routes *****/
 
 app.use('/api/questions', questions);
 app.use('/api/offers', offers);
+app.use('/api/companies', companies);
 app.use('/api/applications', applications);
 
 /**** listen *****/
