@@ -11,13 +11,11 @@ const router = express.Router();
 router.post("/answer/:id_candidates", (req, res) => {
   const dataForm = {
     ...req.body,
-    ...req.query,
     id_candidates: req.params.id_candidates,
     id: null,
     created_at: new Date(),
     updated_at: new Date()
   };
-  const { id_offers, id_questions } = req.query;
   const sql = `INSERT INTO answers SET ?`;
   connection.query(sql, dataForm, (err, results) => {
     if (err) {
@@ -34,7 +32,7 @@ router.post("/answer/:id_candidates", (req, res) => {
  */
 router.post("/:id_candidates", (req, res) => {
   const dataForm = {
-    ...req.query,
+    ...req.body,
     id_candidates: req.params.id_candidates,
     status: "waiting"
   };

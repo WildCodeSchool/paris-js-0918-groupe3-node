@@ -3,6 +3,8 @@ const express = require("express");
 const connection = require("../config");
 const router = express.Router();
 
+router
+  .route("/:id_companies")
 /**
  * Posts a new offer for the company,
  * then gets the id of the offer and posts the corresponding questions ids
@@ -11,53 +13,74 @@ const router = express.Router();
  * id_companies has to be passed as params and questions ids as query, comma separated
  * (?questions=1,2,3,4,5,6)
  */
-router.post("/:id_companies", (req, res) => {
-  // Calculates validity date
-  let validUntil = new Date();
-  validUntil.setMonth(validUntil.getMonth() + 2);
+  .post((req, res) => {
+    // Calculates validity date
+    let validUntil = new Date();
+    validUntil.setMonth(validUntil.getMonth() + 2);
 
-  // fusing datas from req.body and fix data
-  fixData = {
-    id: null,
-    is_active: true,
-    id_companies: req.params.id_companies,
-    valid_until: validUntil,
-    created_at: new Date(),
-    updated_at: new Date()
-  };
-  const formData = Object.assign(fixData, req.body);
+    // fusing datas from req.body and fix data
+    fixData = {
+      id: null,
+      is_active: true,
+      id_companies: req.params.id_companies,
+      valid_until: validUntil,
+      created_at: new Date(),
+      updated_at: new Date()
+    };
+    const formData = Object.assign(fixData, req.body);
 
-  //Inserting data in offers table
-  const sqlOffer = `INSERT INTO offers SET ?`;
-  connection.query(sqlOffer, formData, (err, results) => {
-    if (err) {
-      res.status(500).send(`Erreur serveur : ${err}`);
-    } else {
-      //Inserting data in offers_questions table
-      const offerId = results.insertId;
-      const questions = req.query.questions.split(",");
-      let sqlQuestionsValues = [];
-      for (let i = 0; i < questions.length; i++) {
-        const questionId = questions[i];
-        if (/\d+/.test(questionId))
-          sqlQuestionsValues.push(
-            `(${offerId}, ${connection.escape(questionId)})`
-          );
-      }
-
-      const sqlQuestions = `
-          INSERT INTO offers_questions (id_offers, id_questions) 
-          VALUES ${sqlQuestionsValues.join(`, `)}`;
-      connection.query(sqlQuestions, (err2, results2) => {
-        console.log(sqlQuestions);
-        if (err2) {
-          res.status(500).send(`Erreur serveur : ${err2}`);
-        } else {
-          res.json(results2);
+    //Inserting data in offers table
+    const sqlOffer = `INSERT INTO offers SET ?`;
+    connection.query(sqlOffer, formData, (err, results) => {
+      if (err) {
+        res.status(500).send(`Erreur serveur : ${err}`);
+      } else {
+        //Inserting data in offers_questions table
+        const offerId = results.insertId;
+        const questions = req.query.questions.split(",");
+        let sqlQuestionsValues = [];
+        for (let i = 0; i < questions.length; i++) {
+          const questionId = questions[i];
+          if (/\d+/.test(questionId))
+            sqlQuestionsValues.push(
+              `(${offerId}, ${connection.escape(questionId)})`
+            );
         }
-      });
+
+        const sqlQuestions = `
+            INSERT INTO offers_questions (id_offers, id_questions) 
+            VALUES ${sqlQuestionsValues.join(`, `)}`;
+        connection.query(sqlQuestions, (err2, results2) => {
+          if (err2) {
+            res.status(500).send(`Erreur serveur : ${err2}`);
+          } else {
+            res.json(results2);
+          }
+        });
+      }
+    });
+  })
+
+/**
+ * Allows to GET offers for a company
+ */
+.get("/:id_companies", (req, res) => {
+  const sql = `
+    SELECT title description, contract_type, is_active, is_published, id_companies 
+    FROM offers 
+    WHERE id_companies=? 
+    AND is_active=?`;
+  connection.query(
+    sql,
+    [req.params.id_companies, req.query.is_active],
+    (err, results) => {
+      if (err) {
+        res.status(500).send(`Erreur serveur : ${err}`);
+      } else {
+        res.json(results);
+      }
     }
-  });
+  );
 });
 
 /**
@@ -120,29 +143,6 @@ router.get('/details/:id_offers', (req, res) => {
       );
     }
   });
-});
-
-
-/**
- * Allows to GET offers for a company
- */
-router.get("/:id_companies", (req, res) => {
-  const sql = `
-    SELECT title description, contract_type, is_active, is_published, id_companies 
-    FROM offers 
-    WHERE id_companies=? 
-    AND is_active=?`;
-  connection.query(
-    sql,
-    [req.params.id_companies, req.query.is_active],
-    (err, results) => {
-      if (err) {
-        res.status(500).send(`Erreur serveur : ${err}`);
-      } else {
-        res.json(results);
-      }
-    }
-  );
 });
 
 module.exports = router;
