@@ -20,7 +20,7 @@ router.route('/:id_companies')
     });
   })
 
-  .put('/:id_companies', (req, res) => {
+  .put((req, res) => {
     const dataForm = req.body;
     const sql = `
     UPDATE companies 
