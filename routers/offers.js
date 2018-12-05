@@ -66,7 +66,7 @@ router
  */
 .get((req, res) => {
   const sql = `
-    SELECT id, title description, contract_type, is_active, is_published, id_companies, updated_at
+    SELECT id, title, description, contract_type, is_active, is_published, id_companies, updated_at
     FROM offers 
     WHERE id_companies=? 
     AND is_active=?`;
