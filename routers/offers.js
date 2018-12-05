@@ -64,7 +64,7 @@ router
 /**
  * Allows to GET offers for a company
  */
-.get("/:id_companies", (req, res) => {
+.get((req, res) => {
   const sql = `
     SELECT title description, contract_type, is_active, is_published, id_companies 
     FROM offers 
