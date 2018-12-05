@@ -66,7 +66,7 @@ router
  */
 .get((req, res) => {
   const sql = `
-    SELECT title, description, contract_type, is_active, is_published, id_companies 
+    SELECT id, title, description, contract_type, is_active, is_published, id_companies, updated_at
     FROM offers 
     WHERE id_companies=? 
     AND is_active=?`;
@@ -92,7 +92,7 @@ router.get("/", (req, res) => {
   typeEsc = connection.escape(type);
   placeEsc = connection.escape(`%${place}%`);
   const sql = `
-      SELECT title, description, contract_type, place, id_companies
+      SELECT id, title, description, contract_type, place, id_companies, updated_at
       FROM offers 
       WHERE is_active=1
       AND is_published=1
