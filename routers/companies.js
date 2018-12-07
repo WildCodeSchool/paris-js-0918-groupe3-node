@@ -5,7 +5,8 @@ const router = express.Router();
 
 router.route('/')
   .post((req, res) => {
-    const sql = `SELECT id FROM companies WHERE email = ${req.body.email}`;
+    const sql = `SELECT id FROM companies WHERE email = '${req.body.email}'`;
+    console.log(sql)
     connection.query(sql, (err, results) => {
       if (err) {
         res.status(500).send(`Erreur serveur : ${err}`)
