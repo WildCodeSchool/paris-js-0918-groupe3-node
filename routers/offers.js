@@ -1,7 +1,13 @@
 /**** imports *****/
 const express = require("express");
+const jwt = require('jsonwebtoken');
+
 const connection = require("../config");
+const getToken = require('../helpers/getToken');
+const jwtSecret = require('../secure/jwtSecret');
+
 const router = express.Router();
+
 
 router
   .route("/:id_companies")
@@ -64,26 +70,34 @@ router
  * Allows to GET offers for a company
  */
 .get((req, res) => {
-  const sql = `
-    SELECT id, title, description, contract_type, is_active, is_published, id_companies, updated_at
-    FROM offers 
-    WHERE id_companies=? 
-    AND is_active=?`;
-  connection.query(
-    sql,
-    [req.params.id_companies, req.query.is_active],
-    (err, results) => {
-      if (err) {
-        res.status(500).send(`Erreur serveur : ${err}`);
+  const token = getToken(req);
+  jwt.verify(token, jwtSecret, (err, decode) => {
+    if (err) {
+      res.sendStatus(403)
+    } else {
+      if (decode.id === req.params.id_companies){
+        const sql = `
+        SELECT id, title, description, contract_type, is_active, is_published, id_companies, updated_at
+        FROM offers 
+        WHERE id_companies=? 
+        AND is_active=?`;
+        connection.query(sql, [req.params.id_companies, req.query.is_active], (err, results) => {
+          if (err) {
+            res.status(500).send(`Erreur serveur : ${err}`);
+          } else {
+            res.json(results);
+          }
+        });
       } else {
-        res.json(results);
+        res.sendStatus(403);
       }
     }
-  );
+  });
+  
 });
 
 /**
- * Sends the offers that match the query and the questions Ids
+ * Sends the offers that matches the query and the questions Ids
  */
 router.get("/", (req, res) => {
   const { search, type, place } = req.query;
