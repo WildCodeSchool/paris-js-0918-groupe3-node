@@ -28,7 +28,6 @@ router
       updated_at: new Date()
     };
     const formData = Object.assign(fixData, req.body);
-
     //Inserting data in offers table
     const sqlOffer = `INSERT INTO offers SET ?`;
     connection.query(sqlOffer, formData, (err, results) => {
