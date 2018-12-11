@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/WildCodeSchool/paris-js-0918-groupe3-node#readme",
   "dependencies": {
+    "bcrypt": "^3.0.2",
     "body-parser": "^1.18.3",
     "cors": "^2.8.5",
     "express": "^4.16.4",

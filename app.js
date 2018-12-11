@@ -19,6 +19,7 @@ const questions = require('./routers/questions');
 const offers = require('./routers/offers');
 const companies = require('./routers/companies');
 const applications = require('./routers/applications');
+const auth = require('./routers/auth');
 
 /**** routes *****/
 
@@ -26,6 +27,7 @@ app.use('/api/questions', questions);
 app.use('/api/offers', offers);
 app.use('/api/companies', companies);
 app.use('/api/applications', applications);
+app.use('/api/auth', auth);
 
 /**** listen *****/
 app.listen(port, (err) => {
