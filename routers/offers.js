@@ -72,28 +72,24 @@ router
 .get((req, res) => {
   const token = getToken(req);
   jwt.verify(token, jwtSecret, (err, decode) => {
-    if (err) {
-      res.sendStatus(403)
+    const requestId = Number(req.params.id_companies);
+    if (!err && decode.id === requestId){
+      const sql = `
+      SELECT id, title, description, contract_type, is_active, is_published, id_companies, updated_at
+      FROM offers 
+      WHERE id_companies=? 
+      AND is_active=?`;
+      connection.query(sql, [req.params.id_companies, req.query.is_active], (err, results) => {
+        if (err) {
+          res.status(500).send(`Erreur serveur : ${err}`);
+        } else {
+          res.json(results);
+        }
+      });
     } else {
-      if (decode.id === req.params.id_companies){
-        const sql = `
-        SELECT id, title, description, contract_type, is_active, is_published, id_companies, updated_at
-        FROM offers 
-        WHERE id_companies=? 
-        AND is_active=?`;
-        connection.query(sql, [req.params.id_companies, req.query.is_active], (err, results) => {
-          if (err) {
-            res.status(500).send(`Erreur serveur : ${err}`);
-          } else {
-            res.json(results);
-          }
-        });
-      } else {
-        res.sendStatus(403);
-      }
-    }
-  });
-  
+      res.status(403);
+    }    
+  });  
 });
 
 /**
