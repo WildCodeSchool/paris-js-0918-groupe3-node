@@ -1,6 +1,8 @@
 /**** imports *****/
 const express = require('express');
 const connection = require('../config');
+const getToken = require('../helpers/getToken');
+
 const router = express.Router();
 
 router.route('/:id_companies')
@@ -8,17 +10,24 @@ router.route('/:id_companies')
    * Sends company information from the id in params
    */
   .get((req, res) => {
-    const sql = `
-      SELECT name, siret, description, logo, link, email
-      FROM companies
-      WHERE is_active
-      AND id=?`;
-    connection.query(sql, req.params.id_companies, (err, results) => {
-      if (err) {
-        res.status(500).send(`Erreur serveur : ${err}`)
+    const token = getToken(req);
+    jwt.verify(token, jwtSecret, (err, decode) => {
+      if (!err && decode.id === req.params.id_companies){
+        const sql = `
+        SELECT name, siret, description, logo, link, email
+        FROM companies
+        WHERE is_active
+        AND id=?`;
+        connection.query(sql, req.params.id_companies, (err, results) => {
+          if (err) {
+            res.status(500).send(`Erreur serveur : ${err}`)
+          } else {
+            res.send(results)
+          }
+        });
       } else {
-        res.send(results)
-      }
+        res.sendStatus(403)
+      }   
     });
   })
 
