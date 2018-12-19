@@ -88,10 +88,15 @@ router
       if (!emailRegex.test(req.body.email))
         res.status(403).send("email non valide");
       else {
-        const newPath = "public/logoCompanies/" +
+
+        
+        const newPath = req.file ?
+          "public/logoCompanies/" +
           `logo_${req.body.name
             .trim()
-            .replace(" ", "_")}_${Date.now()}.${getFileExtension(req.file.mimetype)}`;
+            .replace(" ", "_")}_${Date.now()}.${getFileExtension(req.file.mimetype)}` 
+          : null;
+          
         fs.rename(
           req.file.path,
           newPath,
