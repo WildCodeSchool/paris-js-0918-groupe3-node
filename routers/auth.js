@@ -78,7 +78,7 @@ router
   });
 
 router
-  .route("/signup/:userType")
+  .route("/signup/companies")
   /**
    * Sign up
    */
@@ -88,12 +88,10 @@ router
       if (!emailRegex.test(req.body.email))
         res.status(403).send("email non valide");
       else {
-        console.log(req.file);
-        
-        const newPath= "public/logoCompanies/" +
-        `logo_${req.body.name
-          .trim()
-          .replace(" ", "_")}_${Date.now()}.${getFileExtension(req.file.mimetype)}`;
+        const newPath = "public/logoCompanies/" +
+          `logo_${req.body.name
+            .trim()
+            .replace(" ", "_")}_${Date.now()}.${getFileExtension(req.file.mimetype)}`;
         fs.rename(
           req.file.path,
           newPath,
@@ -109,9 +107,8 @@ router
                 password: hash,
                 logo: newPath
               };
-              const sql = `INSERT INTO ?? SET ?`;
-              const sqlData = [req.params.userType, dataForm];
-              connection.query(sql, sqlData, (err, results) => {
+              const sql = `INSERT INTO companies SET ?`;
+              connection.query(sql, dataForm, (err, results) => {
                 if (err) res.status(200).send({ error: err });
                 else {
                   res.json({ id: results.insertId });
@@ -122,6 +119,33 @@ router
         );
       }
     });
-  });
+  })
+
+router
+  .route("/signup/candidates")
+  .post((req, res) => {
+    bcrypt.hash(req.body.password, 10, (crypErr, hash) => {
+      if (crypErr) res.sendStatus(500);
+      if (!emailRegex.test(req.body.email))
+        res.status(403).send("email non valide");
+      else {
+        const dataForm = {
+          ...req.body,
+          id: null,
+          created_at: new Date(),
+          updated_at: new Date(),
+          is_active: 1,
+          password: hash,
+        };
+        const sql = `INSERT INTO candidates SET ?`;
+        connection.query(sql, dataForm, (err, results) => {
+          if (err) res.status(200).send({ error: err });
+          else {
+            res.json({ id: results.insertId });
+          }
+        });
+      }
+    })
+  })
 
 module.exports = router;
