@@ -8,7 +8,7 @@ const fs = require("fs");
 const connection = require("../config");
 const jwtSecret = require("../secure/jwtSecret");
 const router = express.Router();
-const getFileExtension = require("../helpers/getFileExtension")
+const getFileExtension = require("../helpers/getFileExtension");
 
 const emailRegex = require("../secure/emailRegex");
 
@@ -87,70 +87,79 @@ router
       if (crypErr) res.sendStatus(500);
       if (!emailRegex.test(req.body.email))
         res.status(403).send("email non valide");
-      else {
-
-        
-        const newPath = req.file ?
-          "public/logoCompanies/" +
-          `logo_${req.body.name
-            .trim()
-            .replace(" ", "_")}_${Date.now()}.${getFileExtension(req.file.mimetype)}` 
-          : null;
-          
-        fs.rename(
-          req.file.path,
-          newPath,
-          err => {
-            if (err) res.status(500).send(err);
-            else {
-              const dataForm = {
-                ...req.body,
-                id: null,
-                created_at: new Date(),
-                updated_at: new Date(),
-                is_active: 1,
-                password: hash,
-                logo: newPath
-              };
-              const sql = `INSERT INTO companies SET ?`;
-              connection.query(sql, dataForm, (err, results) => {
-                if (err) res.status(200).send({ error: err });
-                else {
-                  res.json({ id: results.insertId });
-                }
-              });
-            }
-          }
-        );
-      }
-    });
-  })
-
-router
-  .route("/signup/candidates")
-  .post((req, res) => {
-    bcrypt.hash(req.body.password, 10, (crypErr, hash) => {
-      if (crypErr) res.sendStatus(500);
-      if (!emailRegex.test(req.body.email))
-        res.status(403).send("email non valide");
-      else {
+      if (!req.file) {
         const dataForm = {
           ...req.body,
           id: null,
           created_at: new Date(),
           updated_at: new Date(),
           is_active: 1,
-          password: hash,
+          password: hash
         };
-        const sql = `INSERT INTO candidates SET ?`;
+        const sql = `INSERT INTO companies SET ?`;
         connection.query(sql, dataForm, (err, results) => {
           if (err) res.status(200).send({ error: err });
           else {
             res.json({ id: results.insertId });
           }
         });
+      } else {
+        const newPath =
+          "public/logoCompanies/" +
+          `logo_${req.body.name
+            .trim()
+            .replace(" ", "_")}_${Date.now()}.${getFileExtension(
+            req.file.mimetype
+          )}`;
+
+        fs.rename(req.file.path, newPath, err => {
+          if (err) res.status(500).send(err);
+          else {
+            const dataForm = {
+              ...req.body,
+              id: null,
+              created_at: new Date(),
+              updated_at: new Date(),
+              is_active: 1,
+              password: hash,
+              logo: newPath
+            };
+            const sql = `INSERT INTO companies SET ?`;
+            connection.query(sql, dataForm, (err, results) => {
+              if (err) res.status(200).send({ error: err });
+              else {
+                res.json({ id: results.insertId });
+              }
+            });
+          }
+        });
       }
-    })
-  })
+    });
+  });
+
+router.route("/signup/candidates").post((req, res) => {
+  bcrypt.hash(req.body.password, 10, (crypErr, hash) => {
+    if (crypErr) res.sendStatus(500);
+    if (!emailRegex.test(req.body.email))
+      res.status(403).send("email non valide");
+    else {
+      const dataForm = {
+        ...req.body,
+        id: null,
+        created_at: new Date(),
+        updated_at: new Date(),
+        is_active: 1,
+        password: hash
+      };
+      const sql = `INSERT INTO candidates SET ?`;
+      connection.query(sql, dataForm, (err, results) => {
+        if (err) res.status(200).send({ error: err });
+        else {
+          res.json({ id: results.insertId });
+        }
+      });
+    }
+  });
+});
 
 module.exports = router;
