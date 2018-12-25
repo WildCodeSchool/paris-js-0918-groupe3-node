@@ -2,6 +2,8 @@
 const express = require('express');
 const connection = require('../config');
 const getToken = require('../helpers/getToken');
+const jwt = require('jsonwebtoken');
+const jwtSecret = require('../secure/jwtSecret');
 
 const router = express.Router();
 
@@ -12,7 +14,8 @@ router.route('/:id_companies')
   .get((req, res) => {
     const token = getToken(req);
     jwt.verify(token, jwtSecret, (err, decode) => {
-      if (!err && decode.id === req.params.id_companies){
+      const requestId = Number(req.params.id_companies);
+      if (!err && decode.id === requestId){
         const sql = `
         SELECT name, siret, description, logo, link, email
         FROM companies
