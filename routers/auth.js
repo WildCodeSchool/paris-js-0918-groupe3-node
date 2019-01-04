@@ -137,6 +137,8 @@ router
     });
   });
 
+
+
 router.route("/signup/candidates").post((req, res) => {
   bcrypt.hash(req.body.password, 10, (crypErr, hash) => {
     if (crypErr) res.sendStatus(500);

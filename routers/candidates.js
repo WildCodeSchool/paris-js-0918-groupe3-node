@@ -1,18 +1,20 @@
 /**** imports *****/
-const express = require('express');
-const connection = require('../config');
-const getToken = require('../helpers/getToken');
+const express = require("express");
+const connection = require("../config");
+const getToken = require("../helpers/getToken");
 
 const router = express.Router();
 
-router.route('/:id_candidates')
+router
+  .route("/:id_candidates")
   /**
-   * Sends company information from the id in params
+   * Sends candidate information from the id in params
    */
   .get((req, res) => {
     const token = getToken(req);
     jwt.verify(token, jwtSecret, (err, decode) => {
-      if (!err && decode.id === req.params.id_candidates){
+      const requestId = Number(req.params.id_companies);
+      if (!err && decode.id === requestId) {
         const sql = `
         SELECT email, phone
         FROM candidates
@@ -20,28 +22,40 @@ router.route('/:id_candidates')
         AND id=?`;
         connection.query(sql, req.params.id_candidates, (err, results) => {
           if (err) {
-            res.status(500).send(`Erreur serveur : ${err}`)
+            res.status(500).send(`Erreur serveur : ${err}`);
           } else {
-            res.send(results)
+            res.send(results);
           }
         });
       } else {
-        res.sendStatus(403)
-      }   
+        res.sendStatus(403);
+      }
     });
   })
 
   .put((req, res) => {
-    const dataForm = req.body;
-    const sql = `
+    const token = getToken(req);
+    jwt.verify(token, jwtSecret, (err, decode) => {
+      const requestId = Number(req.params.id_companies);
+      if (!err && decode.id === requestId) {
+        const dataForm = req.body;
+        const sql = `
     UPDATE candidates 
     SET ?
     WHERE id = ?`;
-    connection.query(sql, [dataForm, req.params.id_candidates], (err, results) => {
-      if (err) {
-        res.status(500).send(`Erreur serveur : ${err}`)
+        connection.query(
+          sql,
+          [dataForm, req.params.id_candidates],
+          (err, results) => {
+            if (err) {
+              res.status(500).send(`Erreur serveur : ${err}`);
+            } else {
+              res.send(results);
+            }
+          }
+        );
       } else {
-        res.send(req.body)
+        res.sendStatus(403);
       }
     });
   });
