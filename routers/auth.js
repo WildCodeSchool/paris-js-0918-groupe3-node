@@ -45,10 +45,7 @@ router
         res.status(500).send(`Erreur serveur : ${err}`);
       } else {
         if (results.length) {
-          bcrypt.compare(
-            req.body.password,
-            results[0].password,
-            (cryptErr, match) => {
+          bcrypt.compare(req.body.password, results[0].password, (cryptErr, match) => {
               if (cryptErr) res.sendStatus(500);
               if (match) {
                 // créer token jwt
