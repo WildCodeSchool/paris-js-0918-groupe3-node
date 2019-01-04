@@ -29,7 +29,7 @@ router.route('/:id_companies')
           }
         });
       } else {
-        res.sendStatus(403)
+        res.status(403).json({token})
       }   
     });
   })
