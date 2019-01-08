@@ -70,8 +70,8 @@ router
    */
   .get((req, res) => {
     const token = getToken(req);
-    console.log("token",token);
-    
+    console.log("token", token);
+
     jwt.verify(token, jwtSecret, (err, decode) => {
       const requestId = Number(req.params.id_companies);
       if (!err && decode.id === requestId) {
@@ -107,7 +107,8 @@ router
     jwt.verify(token, jwtSecret, (err, decode) => {
       if (!err) {
         const dataForm = {
-          ...req.body,
+          is_sent: req.body.is_sent,
+          id_offers: req.params.id_offer,
           id_candidates: decode.id,
           status: "waiting"
         };
@@ -125,17 +126,34 @@ router
     });
   })
 
+/**
+ * Allows to GET answers and some informations on applications for offers when id_companies is verified
+ */
   .get((req, res) => {
-    // const token = getToken(req);
+    const token = getToken(req);
+    const { id_offer } = req.params;
+    jwt.verify(token, jwtSecret, (err, decode) => {
+      const sql = `SELECT id_companies FROM offers WHERE id =?`;
+      connection.query(sql, id_offer, (err, results) => {
+        if (results[0].id_companies === decode.id) {
+          const sqlIdOk = `
+            SELECT 
+              app.id_candidates, app.status, 
+              ans.text, ans.file_link, ans.updated_at, ans.id_candidates, ans.id_questions
+            FROM applications app, answers ans
+            WHERE app.id_candidates = ans.id_candidates AND app.id_offers = ? AND ans.id_offers = ? AND is_sent`;
+          connection.query(sqlIdOk, [id_offer, id_offer], (err, results) => {
+            if (err) res.status(500).send(err)
+            else res.status(200).json(results)
+          })
+        } else {
+          res.sendStatus(403)
+        }
+      });
+    })
+  })
 
-    // jwt.verify(token, jwtSecret, (err, decode) =>{
-    //   console.log("token", token);
 
-    const sql = `SELECT id_companies FROM offers WHERE id =?`;
-    connection.query(sql, req.params.id_offer, (err, results) => {
-      console.log(results, err);
-    });
-  });
 
 /**
  * Sends the offers that matches the query and the questions Ids
@@ -162,6 +180,28 @@ router.get("/", (req, res) => {
     }
   });
 });
+
+// router.route("/:id_offer/answers")
+//   /**
+//    * Allows to GET answers for offers when id_companies is verified
+//    */
+//   .get((req, res) => {
+//     const token = getToken(req);
+//     jwt.verify(token, jwtSecret, (err, decode) => {
+//       const sql = `SELECT id_companies FROM offers WHERE id =?`;
+//       connection.query(sql, req.params.id_offer, (err, results) => {
+//         if (results[0].id_companies === decode.id) {
+//           const sqlIdOk = `SELECT text, file_link, updated_at, id_candidates, id_questions FROM answers WHERE id_offers = ?`
+//           connection.query(sqlIdOk, req.params.id_offer, (err, results) => {
+//             if (err) res.sendStatus(500)
+//             else res.status(200).json(results)
+//           })
+//         } else {
+//           res.sendStatus(403)
+//         }
+//       });
+//     });
+//   });
 
 /**
  * Sends details of an offer from its id and adds the questions ids of the offer
@@ -197,5 +237,6 @@ router.get("/details/:id_offers", (req, res) => {
     }
   });
 });
+
 
 module.exports = router;
