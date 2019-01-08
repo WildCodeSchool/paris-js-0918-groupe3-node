@@ -1,36 +1,36 @@
 /**** imports *****/
-const express = require('express');
-const connection = require('../config');
-const getToken = require('../helpers/getToken');
-const jwt = require('jsonwebtoken');
-const jwtSecret = require('../secure/jwtSecret');
+const express = require("express");
+const connection = require("../config");
+const getToken = require("../helpers/getToken");
+const jwt = require("jsonwebtoken");
+const jwtSecret = require("../secure/jwtSecret");
 
 const router = express.Router();
 
-router.route('/:id_companies')
+router
+  .route("/")
   /**
-   * Sends company information from the id in params
+   * Sends company information from the id in Token
    */
   .get((req, res) => {
     const token = getToken(req);
     jwt.verify(token, jwtSecret, (err, decode) => {
-      const requestId = Number(req.params.id_companies);
-      if (!err && decode.id === requestId){
+      if (!err) {
         const sql = `
         SELECT name, siret, description, logo, link, email
         FROM companies
         WHERE is_active
         AND id=?`;
-        connection.query(sql, req.params.id_companies, (err, results) => {
+        connection.query(sql, decode.id, (err, results) => {
           if (err) {
-            res.status(500).send(`Erreur serveur : ${err}`)
+            res.status(500).send(`Erreur serveur : ${err}`);
           } else {
-            res.send(results)
+            res.send(results);
           }
         });
       } else {
-        res.status(403).json({token})
-      }   
+        res.status(403).json({ token });
+      }
     });
   })
 
@@ -40,13 +40,17 @@ router.route('/:id_companies')
     UPDATE companies 
     SET ?
     WHERE id = ?`;
-    connection.query(sql, [dataForm, req.params.id_companies], (err, results) => {
-      if (err) {
-        res.status(500).send(`Erreur serveur : ${err}`)
-      } else {
-        res.send(req.body)
+    connection.query(
+      sql,
+      [dataForm, req.params.id_companies],
+      (err, results) => {
+        if (err) {
+          res.status(500).send(`Erreur serveur : ${err}`);
+        } else {
+          res.send(req.body);
+        }
       }
-    });
+    );
   });
 
 module.exports = router;
