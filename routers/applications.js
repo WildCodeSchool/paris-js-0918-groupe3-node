@@ -8,14 +8,14 @@ const router = express.Router();
  *
  * !!!!! AJOUTER UPLOAD DE FICHIERS !!!!!
  */
-router.post("/answer/:id_candidates", (req, res) => {
+router.post("/answer", (req, res) => {
   const token = getToken(req);
   jwt.verify(token, jwtSecret, (err, decode) => {
-    const requestId = Number(req.params.id_companies);
-    if (!err && decode.id === requestId) {
+   
+    if (!err) {
       const dataForm = {
         ...req.body,
-        id_candidates: req.params.id_candidates,
+        id_candidates: decode.id,
         id: null,
         created_at: new Date(),
         updated_at: new Date()

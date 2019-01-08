@@ -9,58 +9,65 @@ const jwtSecret = require("../secure/jwtSecret");
 const router = express.Router();
 
 router
-  .route("/:id_companies")
+  .route("/")
   /**
    * Posts a new offer for the company,
    * then gets the id of the offer and posts the corresponding questions ids
    * in the offers_questions table.
    *
-   * id_companies has to be passed as params and questions ids as query, comma separated
+   * id_companies has to be passed from the token and questions ids as query, comma separated
    * (?questions=1,2,3,4,5,6)
    */
   .post((req, res) => {
-    // Calculates validity date
-    let validUntil = new Date();
-    validUntil.setMonth(validUntil.getMonth() + 2);
+    const token = getToken(req);
+    jwt.verify(token, jwtSecret, (err, decode) => {
+      if (!err) {
+        // Calculates validity date
+        let validUntil = new Date();
+        validUntil.setMonth(validUntil.getMonth() + 2);
 
-    // fusing datas from req.body and fix data
-    fixData = {
-      id: null,
-      is_active: true,
-      id_companies: req.params.id_companies,
-      valid_until: validUntil,
-      created_at: new Date(),
-      updated_at: new Date()
-    };
-    const formData = Object.assign(fixData, req.body);
-    //Inserting data in offers table
-    const sqlOffer = `INSERT INTO offers SET ?`;
-    connection.query(sqlOffer, formData, (err, results) => {
-      if (err) {
-        res.status(500).send(`Erreur serveur : ${err}`);
-      } else {
-        //Inserting data in offers_questions table
-        const offerId = results.insertId;
-        const questions = req.query.questions.split(",");
-        let sqlQuestionsValues = [];
-        for (let i = 0; i < questions.length; i++) {
-          const questionId = questions[i];
-          if (/\d+/.test(questionId))
-            sqlQuestionsValues.push(
-              `(${offerId}, ${connection.escape(questionId)})`
-            );
-        }
-
-        const sqlQuestions = `
-            INSERT INTO offers_questions (id_offers, id_questions) 
-            VALUES ${sqlQuestionsValues.join(`, `)}`;
-        connection.query(sqlQuestions, (err2, results2) => {
-          if (err2) {
-            res.status(500).send(`Erreur serveur : ${err2}`);
+        // fusing datas from req.body and fix data
+        fixData = {
+          id: null,
+          is_active: true,
+          id_companies: decode.id,
+          valid_until: validUntil,
+          created_at: new Date(),
+          updated_at: new Date()
+        };
+        const formData = Object.assign(fixData, req.body);
+        //Inserting data in offers table
+        const sqlOffer = `INSERT INTO offers SET ?`;
+        connection.query(sqlOffer, formData, (err1, results) => {
+          if (err1) {
+            res.status(500).send(`Erreur serveur : ${err1}`);
           } else {
-            res.json(results2);
+            //Inserting data in offers_questions table
+            const offerId = results.insertId;
+            const questions = req.query.questions.split(",");
+            let sqlQuestionsValues = [];
+            for (let i = 0; i < questions.length; i++) {
+              const questionId = questions[i];
+              if (/\d+/.test(questionId))
+                sqlQuestionsValues.push(
+                  `(${offerId}, ${connection.escape(questionId)})`
+                );
+            }
+
+            const sqlQuestions = `
+         INSERT INTO offers_questions (id_offers, id_questions) 
+         VALUES ${sqlQuestionsValues.join(`, `)}`;
+            connection.query(sqlQuestions, (err2, results2) => {
+              if (err2) {
+                res.status(500).send(`Erreur serveur : ${err2}`);
+              } else {
+                res.json(results2);
+              }
+            });
           }
         });
+      } else {
+        res.status(403).json({ token });
       }
     });
   })
@@ -70,11 +77,9 @@ router
    */
   .get((req, res) => {
     const token = getToken(req);
-    console.log("token",token);
-    
+
     jwt.verify(token, jwtSecret, (err, decode) => {
-      const requestId = Number(req.params.id_companies);
-      if (!err && decode.id === requestId) {
+      if (!err) {
         const sql = `
       SELECT id, title, description, contract_type, is_active, is_published, id_companies, updated_at
       FROM offers 
@@ -82,7 +87,7 @@ router
       AND is_active=?`;
         connection.query(
           sql,
-          [req.params.id_companies, req.query.is_active],
+          [decode.id, req.query.is_active],
           (err, results) => {
             if (err) {
               res.status(500).send(`Erreur serveur : ${err}`);
