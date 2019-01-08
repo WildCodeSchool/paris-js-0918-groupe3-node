@@ -2,6 +2,8 @@
 const express = require("express");
 const connection = require("../config");
 const router = express.Router();
+const jwt = require("jsonwebtoken");
+const jwtSecret = require("../secure/jwtSecret");
 
 /**
  * Allows to post answers for questions of an offer

@@ -50,7 +50,7 @@ router
               if (match) {
                 // créer token jwt
                 const tokenInfo = {
-                  name: results[0].name,
+                  name:results[0].name,
                   role: req.params.userType,
                   id: results[0].id
                 };

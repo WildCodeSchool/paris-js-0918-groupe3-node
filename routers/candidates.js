@@ -2,6 +2,8 @@
 const express = require("express");
 const connection = require("../config");
 const getToken = require("../helpers/getToken");
+const jwt = require("jsonwebtoken");
+const jwtSecret = require("../secure/jwtSecret");
 
 const router = express.Router();
 
@@ -13,6 +15,8 @@ router
   .get((req, res) => {
     const token = getToken(req);
     jwt.verify(token, jwtSecret, (err, decode) => {
+  
+      
       if (!err) {
         const sql = `
         SELECT email, phone
@@ -35,8 +39,8 @@ router
   .put((req, res) => {
     const token = getToken(req);
     jwt.verify(token, jwtSecret, (err, decode) => {
-      const requestId = Number(req.params.id_companies);
-      if (!err && decode.id === requestId) {
+      
+      if (!err) {
         const dataForm = req.body;
         const sql = `
     UPDATE candidates 
@@ -44,7 +48,7 @@ router
     WHERE id = ?`;
         connection.query(
           sql,
-          [dataForm, req.params.id_candidates],
+          [dataForm, decode.id],
           (err, results) => {
             if (err) {
               res.status(500).send(`Erreur serveur : ${err}`);
