@@ -1,24 +1,23 @@
 /**** imports *****/
 const express = require("express");
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 
 const connection = require("../config");
-const getToken = require('../helpers/getToken');
-const jwtSecret = require('../secure/jwtSecret');
+const getToken = require("../helpers/getToken");
+const jwtSecret = require("../secure/jwtSecret");
 
 const router = express.Router();
 
-
 router
   .route("/:id_companies")
-/**
- * Posts a new offer for the company,
- * then gets the id of the offer and posts the corresponding questions ids
- * in the offers_questions table.
- *
- * id_companies has to be passed as params and questions ids as query, comma separated
- * (?questions=1,2,3,4,5,6)
- */
+  /**
+   * Posts a new offer for the company,
+   * then gets the id of the offer and posts the corresponding questions ids
+   * in the offers_questions table.
+   *
+   * id_companies has to be passed as params and questions ids as query, comma separated
+   * (?questions=1,2,3,4,5,6)
+   */
   .post((req, res) => {
     // Calculates validity date
     let validUntil = new Date();
@@ -66,31 +65,77 @@ router
     });
   })
 
-/**
- * Allows to GET offers for a company
- */
-.get((req, res) => {
-  const token = getToken(req);
-  jwt.verify(token, jwtSecret, (err, decode) => {
-    const requestId = Number(req.params.id_companies);
-    if (!err && decode.id === requestId){
-      const sql = `
+  /**
+   * Allows to GET offers for a company
+   */
+  .get((req, res) => {
+    const token = getToken(req);
+    console.log("token",token);
+    
+    jwt.verify(token, jwtSecret, (err, decode) => {
+      const requestId = Number(req.params.id_companies);
+      if (!err && decode.id === requestId) {
+        const sql = `
       SELECT id, title, description, contract_type, is_active, is_published, id_companies, updated_at
       FROM offers 
       WHERE id_companies=? 
       AND is_active=?`;
-      connection.query(sql, [req.params.id_companies, req.query.is_active], (err, results) => {
-        if (err) {
-          res.status(500).send(`Erreur serveur : ${err}`);
-        } else {
-          res.json(results);
-        }
-      });
-    } else {
-      res.status(403);
-    }    
-  });  
-});
+        connection.query(
+          sql,
+          [req.params.id_companies, req.query.is_active],
+          (err, results) => {
+            if (err) {
+              res.status(500).send(`Erreur serveur : ${err}`);
+            } else {
+              res.json(results);
+            }
+          }
+        );
+      } else {
+        res.sendStatus(403);
+      }
+    });
+  });
+
+router
+  .route("/:id_offer/applications")
+  /**
+   * Allows a candidate to apply to an offer
+   */
+  .post((req, res) => {
+    const token = getToken(req);
+    jwt.verify(token, jwtSecret, (err, decode) => {
+      if (!err) {
+        const dataForm = {
+          ...req.body,
+          id_candidates: decode.id,
+          status: "waiting"
+        };
+        const sql = `INSERT INTO applications SET ?`;
+        connection.query(sql, dataForm, (err, results) => {
+          if (err) {
+            res.status(500).send(`Erreur serveur : ${err}`);
+          } else {
+            res.json(results);
+          }
+        });
+      } else {
+        res.sendStatus(403);
+      }
+    });
+  })
+
+  .get((req, res) => {
+    // const token = getToken(req);
+
+    // jwt.verify(token, jwtSecret, (err, decode) =>{
+    //   console.log("token", token);
+
+    const sql = `SELECT id_companies FROM offers WHERE id =?`;
+    connection.query(sql, req.params.id_offer, (err, results) => {
+      console.log(results, err);
+    });
+  });
 
 /**
  * Sends the offers that matches the query and the questions Ids
@@ -118,11 +163,10 @@ router.get("/", (req, res) => {
   });
 });
 
-
 /**
  * Sends details of an offer from its id and adds the questions ids of the offer
  */
-router.get('/details/:id_offers', (req, res) => {
+router.get("/details/:id_offers", (req, res) => {
   const sqlOffer = `
     SELECT title, description, contract_type, place, id_companies
     FROM offers

@@ -9,39 +9,27 @@ const router = express.Router();
  * !!!!! AJOUTER UPLOAD DE FICHIERS !!!!!
  */
 router.post("/answer/:id_candidates", (req, res) => {
-  const dataForm = {
-    ...req.body,
-    id_candidates: req.params.id_candidates,
-    id: null,
-    created_at: new Date(),
-    updated_at: new Date()
-  };
-  const sql = `INSERT INTO answers SET ?`;
-  connection.query(sql, dataForm, (err, results) => {
-    if (err) {
-      res.status(500).send(`Erreur serveur : ${err}`);
+  const token = getToken(req);
+  jwt.verify(token, jwtSecret, (err, decode) => {
+    const requestId = Number(req.params.id_companies);
+    if (!err && decode.id === requestId) {
+      const dataForm = {
+        ...req.body,
+        id_candidates: req.params.id_candidates,
+        id: null,
+        created_at: new Date(),
+        updated_at: new Date()
+      };
+      const sql = `INSERT INTO answers SET ?`;
+      connection.query(sql, dataForm, (err, results) => {
+        if (err) {
+          res.status(500).send(`Erreur serveur : ${err}`);
+        } else {
+          res.json(results);
+        }
+      });
     } else {
-      res.json(results);
-    }
-  });
-});
-
-
-/**
- * Allows to finalize application, post new entry in table application
- */
-router.post("/:id_candidates", (req, res) => {
-  const dataForm = {
-    ...req.body,
-    id_candidates: req.params.id_candidates,
-    status: "waiting"
-  };
-  const sql = `INSERT INTO applications SET ?`;
-  connection.query(sql, dataForm, (err, results) => {
-    if (err) {
-      res.status(500).send(`Erreur serveur : ${err}`);
-    } else {
-      res.json(results);
+      res.sendStatus(403);
     }
   });
 });
