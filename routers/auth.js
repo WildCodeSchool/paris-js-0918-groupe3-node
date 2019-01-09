@@ -45,12 +45,15 @@ router
         res.status(500).send(`Erreur serveur : ${err}`);
       } else {
         if (results.length) {
-          bcrypt.compare(req.body.password, results[0].password, (cryptErr, match) => {
+          bcrypt.compare(
+            req.body.password,
+            results[0].password,
+            (cryptErr, match) => {
               if (cryptErr) res.sendStatus(500);
               if (match) {
                 // créer token jwt
                 const tokenInfo = {
-                  name:results[0].name,
+                  name: results[0].name,
                   role: req.params.userType,
                   id: results[0].id
                 };
@@ -86,7 +89,12 @@ router
         res.status(403).send("email non valide");
       if (!req.file) {
         const dataForm = {
-          ...req.body,
+          name: req.body.name,
+          siret: req.body.siret,
+          logo: req.body.logo,
+          link: req.body.link,
+          email: req.body.email,
+          description: req.body.description,
           id: null,
           created_at: new Date(),
           updated_at: new Date(),
@@ -113,7 +121,11 @@ router
           if (err) res.status(500).send(err);
           else {
             const dataForm = {
-              ...req.body,
+              name: req.body.name,
+              siret: req.body.siret,
+              link: req.body.link,
+              email: req.body.email,
+              description: req.body.description,
               id: null,
               created_at: new Date(),
               updated_at: new Date(),
@@ -134,8 +146,6 @@ router
     });
   });
 
-
-
 router.route("/signup/candidates").post((req, res) => {
   bcrypt.hash(req.body.password, 10, (crypErr, hash) => {
     if (crypErr) res.sendStatus(500);
@@ -143,7 +153,8 @@ router.route("/signup/candidates").post((req, res) => {
       res.status(403).send("email non valide");
     else {
       const dataForm = {
-        ...req.body,
+        email: req.body.email,
+        phone: req.body.phone,
         id: null,
         created_at: new Date(),
         updated_at: new Date(),
@@ -151,6 +162,7 @@ router.route("/signup/candidates").post((req, res) => {
         password: hash
       };
       const sql = `INSERT INTO candidates SET ?`;
+
       connection.query(sql, dataForm, (err, results) => {
         if (err) res.status(200).send({ error: err });
         else {
