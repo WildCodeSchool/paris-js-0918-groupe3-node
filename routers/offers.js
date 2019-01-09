@@ -55,8 +55,8 @@ router
             }
 
             const sqlQuestions = `
-         INSERT INTO offers_questions (id_offers, id_questions) 
-         VALUES ${sqlQuestionsValues.join(`, `)}`;
+              INSERT INTO offers_questions (id_offers, id_questions) 
+              VALUES ${sqlQuestionsValues.join(`, `)}`;
             connection.query(sqlQuestions, (err2, results2) => {
               if (err2) {
                 res.status(500).send(`Erreur serveur : ${err2}`);
@@ -80,10 +80,10 @@ router
     jwt.verify(token, jwtSecret, (err, decode) => {
       if (!err) {
         const sql = `
-      SELECT id, title, description, contract_type, is_active, is_published, id_companies, updated_at
-      FROM offers 
-      WHERE id_companies=? 
-      AND is_active=?`;
+          SELECT id, title, description, contract_type, is_active, is_published, id_companies, updated_at
+          FROM offers 
+          WHERE id_companies=? 
+          AND is_active=?`;
         connection.query(
           sql,
           [decode.id, req.query.is_active],
@@ -162,7 +162,7 @@ router
 /**
  * Sends the offers that matches the query and the questions Ids
  */
-router.get("/", (req, res) => {
+router.get("/search", (req, res) => {
   const { search, type, place } = req.query;
   searchEsc = connection.escape(`%${search}%`);
   typeEsc = connection.escape(type);
