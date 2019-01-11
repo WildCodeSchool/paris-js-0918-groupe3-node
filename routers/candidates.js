@@ -89,7 +89,29 @@ router
         });
       }
     });
+  });
 
-  })
+  router.route('/offer:id_offer/answers')
+    .get((req,res) => {
+      const token = getToken(req);
+      const { id_offer } = req.params;
+      jwt.verify(token, jwtSecret, (err, decode) => {
+        if (err || decode.role !== 'candidates') res.sendStatus(403);
+        else {
+          const sql = `
+          SELECT a.text, a.file_link, q.text
+          FROM answers a, questions q
+          WHERE a.id_candidates = ?
+          AND a.id_offers = ?
+          AND a.id_question = q.id;`;
+          connection.query(sql, [decode.id, id_offer], (err, results) => {
+            if (err) res.sendStatus(500);
+            else {
+              res.status(200).send(results);
+            }
+          });
+        }
+      });
+    });
 
 module.exports = router;
