@@ -63,4 +63,33 @@ router
     });
   });
 
+  router.route('/applications')
+  /**
+   * Sends applications of user from id in token.
+   */
+  .get((req, res) => {
+    const token = getToken(req);
+    jwt.verify(token, jwtSecret, (err, decode) => {
+      if (err || decode.role !== 'candidates') res.sendStatus(403);
+      else {
+        const sql = `
+          SELECT 
+            a.id_offers, a.status, a.updated_at, 
+            o.title, o.description, o.contract_type, o.updated_at, o.id_companies,
+            c.name, c.logo
+          FROM applications a, offers o, companies c
+          WHERE a.id_candidates = ? AND a.is_sent
+          AND a.id_offers = o.id
+          AND o.id_companies = c.id;`
+        connection.query(sql, decode.id, (err, results) => {
+          if (err) res.status(500).send(err);
+          else {
+            res.send(results)
+          }
+        });
+      }
+    });
+
+  })
+
 module.exports = router;
