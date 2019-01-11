@@ -15,8 +15,8 @@ router
   .get((req, res) => {
     const token = getToken(req);
     jwt.verify(token, jwtSecret, (err, decode) => {
-  
-      
+
+
       if (!err) {
         const sql = `
         SELECT email, phone
@@ -39,7 +39,7 @@ router
   .put((req, res) => {
     const token = getToken(req);
     jwt.verify(token, jwtSecret, (err, decode) => {
-      
+
       if (!err) {
         const dataForm = req.body;
         const sql = `
@@ -63,7 +63,7 @@ router
     });
   });
 
-  router.route('/applications')
+router.route('/applications')
   /**
    * Sends applications of user from id in token.
    */
@@ -91,27 +91,27 @@ router
     });
   });
 
-  router.route('/offer:id_offer/answers')
-    .get((req,res) => {
-      const token = getToken(req);
-      const { id_offer } = req.params;
-      jwt.verify(token, jwtSecret, (err, decode) => {
-        if (err || decode.role !== 'candidates') res.sendStatus(403);
-        else {
-          const sql = `
-          SELECT a.text, a.file_link, q.text
+router.route('/offer:id_offer/answers')
+  .get((req, res) => {
+    const token = getToken(req);
+    const { id_offer } = req.params;
+    jwt.verify(token, jwtSecret, (err, decode) => {
+      if (err || decode.role !== 'candidates') res.sendStatus(403);
+      else {
+        const sql = `
+          SELECT a.text answer, a.file_link, q.text question
           FROM answers a, questions q
           WHERE a.id_candidates = ?
           AND a.id_offers = ?
-          AND a.id_question = q.id;`;
-          connection.query(sql, [decode.id, id_offer], (err, result) => {
-            if (err) res.sendStatus(500);
-            else {
-              res.status(200).send(result);
-            }
-          });
-        }
-      });
+          AND a.id_questions = q.id;`;
+        connection.query(sql, [decode.id, id_offer], (err, result) => {
+          if (err) res.sendStatus(500);
+          else {
+            res.status(200).send(result);
+          }
+        });
+      }
     });
+  });
 
 module.exports = router;
