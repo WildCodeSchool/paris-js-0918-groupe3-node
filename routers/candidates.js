@@ -104,10 +104,10 @@ router
           WHERE a.id_candidates = ?
           AND a.id_offers = ?
           AND a.id_question = q.id;`;
-          connection.query(sql, [decode.id, id_offer], (err, results) => {
+          connection.query(sql, [decode.id, id_offer], (err, result) => {
             if (err) res.sendStatus(500);
             else {
-              res.status(200).send(results);
+              res.status(200).send(result);
             }
           });
         }
