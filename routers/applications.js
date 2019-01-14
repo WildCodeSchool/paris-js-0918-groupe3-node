@@ -95,7 +95,7 @@ router.route("/status").put((req, res) => {
                 (err, results) => {
                   if (err) res.status(500).send(err);
                   else {
-                    // Allows the company to get the candidate info when application is validated //
+                    // Allows the company to get the candidate info and get them by email when application is validated //
                     if (status === "validated") {
                       const sqlGetCompanyInfo = `SELECT email FROM companies WHERE id=?`;
                       connection.query(
