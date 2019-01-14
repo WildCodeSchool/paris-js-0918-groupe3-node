@@ -19,6 +19,8 @@ router
    * (?questions=1,2,3,4,5,6)
    */
   .post((req, res) => {
+    console.log(req.body, "REQBODY");
+    
     const token = getToken(req);
     jwt.verify(token, jwtSecret, (err, decode) => {
       if (!err) {
