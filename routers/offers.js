@@ -130,29 +130,33 @@ router
     });
   })
 
-/**
- * Allows to GET answers and some informations on applications for offers when id_companies is verified
- */
+  /**
+   * Allows to GET answers and some informations on applications for offers when id_companies is verified
+   */
   .get((req, res) => {
     const token = getToken(req);
     const { id_offer } = req.params;
     jwt.verify(token, jwtSecret, (err, decode) => {
       const sql = `SELECT id_companies FROM offers WHERE id =?`;
       connection.query(sql, id_offer, (err, results) => {
-        if (results[0].id_companies === decode.id) { 
-          const sqlIdOk = `
-            SELECT 
-              app.id_candidates, app.status status_application, 
-              ans.text answers_text, ans.file_link, ans.updated_at, ans.id_candidates,
-              q.text question_text
-            FROM applications app, answers ans, questions q
-            WHERE q.id = ans.id_questions AND app.id_candidates = ans.id_candidates AND app.id_offers = ? AND ans.id_offers = ? AND is_sent;`;
-          connection.query(sqlIdOk, [id_offer, id_offer], (err, results) => {
-            if (err) res.status(500).send(err)
-            else res.status(200).json(results)
-          })
+        if (err) {
+          res.status(500).send(`Erreur serveur : ${err}`);
         } else {
-          res.sendStatus(403)
+          if (results[0].id_companies === decode.id) {
+            const sqlIdOk = `
+              SELECT 
+                app.id_candidates, app.status status_application, 
+                ans.text answers_text, ans.file_link, ans.updated_at, ans.id_candidates,
+                q.text question_text
+              FROM applications app, answers ans, questions q
+              WHERE q.id = ans.id_questions AND app.id_candidates = ans.id_candidates AND app.id_offers = ? AND ans.id_offers = ? AND is_sent;`;
+            connection.query(sqlIdOk, [id_offer, id_offer], (err, results) => {
+              if (err) res.status(500).send(err)
+              else res.status(200).json(results)
+            })
+          } else {
+            res.sendStatus(403)
+          }
         }
       });
     })
