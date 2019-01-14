@@ -3,8 +3,11 @@ const express = require("express");
 const connection = require("../config");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
 const jwtSecret = require("../secure/jwtSecret");
 const getToken = require("../helpers/getToken");
+const password = process.env.GMAIL_PASS;
+require("dotenv").config();
 
 /**
  * Allows to post answers for questions of an offer
@@ -103,6 +106,32 @@ router.route("/status").put((req, res) => {
                           if (err) {
                             res.sendStatus(500);
                           } else {
+                            let smtpTransporter = nodemailer.createTransport({
+                              service: `gmail`,
+                              host: "smtp.gmail.com",
+                              auth: {
+                                user: `jemyplu@gmail.com`,
+                                pass: password
+                              }
+                            });
+
+                            let mailOptions = {
+                              from: "jeremy <jemyplu@gmail.com>", // sender address
+                              to: "supergrandma@yopmail.com", // list of receivers
+                              subject: "Coucou", // Subject line
+                              html: "<p>Aboule la recette mère grand</p>" // plain text body
+                            };
+                            smtpTransporter.sendMail(
+                              mailOptions,
+                              (error, response) => {
+                                if (error) {
+                                  return console.log(error);
+                                }
+                                console.log("message envoyé");
+
+                                res.send(response);
+                              }
+                            );
                             res.status(201).send(results);
                           }
                         }
