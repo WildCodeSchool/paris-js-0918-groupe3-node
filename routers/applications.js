@@ -1,14 +1,13 @@
 /**** imports *****/
+
 const express = require("express");
 const connection = require("../config");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
+
 const jwtSecret = require("../secure/jwtSecret");
 const getToken = require("../helpers/getToken");
-const password = process.env.GMAIL_PASS;
-require("dotenv").config();
-
+const sendEmail = require("../helpers/sendEmail");
 /**
  * Allows to post answers for questions of an offer
  *
@@ -83,57 +82,39 @@ router.route("/status").put((req, res) => {
     jwt.verify(token, jwtSecret, (err, decode) => {
       if (err) res.sendStatus(403);
       else {
-        const sqlGetIDComp = `SELECT id_companies FROM offers WHERE id= ?`;
-        connection.query(sqlGetIDComp, id_offers, (err, results) => {
-          if (err) res.sendStatus(500);
+        const sqlGetIDComp = `SELECT id_companies, title, contract_type, place FROM offers WHERE id= ?`;
+        connection.query(sqlGetIDComp, id_offers, (err, offer) => {
+          if (err) res.status(500).send(err);
           else {
             // Checks if token id corresponds to the company the offers belongs to
-            if (results[0].id_companies === decode.id) {
+            if (offer[0].id_companies === decode.id) {
               const sql = `UPDATE applications SET ? WHERE id_candidates = ? AND id_offers = ?`;
               connection.query(
                 sql,
                 [dataForm, id_candidates, id_offers],
                 (err, results) => {
-                  if (err) res.sendStatus(500);
+                  if (err) res.status(500).send(err);
                   else {
                     // Allows the company to get the candidate info when application is validated //
                     if (status === "validated") {
-                      const sqlGetInfo = `SELECT email, phone FROM candidates WHERE id_candidates =?`;
+                      const sqlGetCompanyInfo = `SELECT email FROM companies WHERE id=?`;
                       connection.query(
-                        sqlGetInfo,
-                        id_candidates,
-                        (err, results) => {
-                          if (err) {
-                            res.sendStatus(500);
-                          } else {
-                            let smtpTransporter = nodemailer.createTransport({
-                              service: `gmail`,
-                              host: "smtp.gmail.com",
-                              auth: {
-                                user: `jemyplu@gmail.com`,
-                                pass: password
+                        sqlGetCompanyInfo,
+                        decode.id,
+                        (err, company) => {
+                          const sqlGetCandidateInfo = `SELECT email, phone FROM candidates WHERE id =?`;
+                          connection.query(
+                            sqlGetCandidateInfo,
+                            id_candidates,
+                            (err, candidate) => {
+                              if (err) {
+                                res.status(500).send(err);
+                              } else {
+                                sendEmail(company[0].email, candidate[0], offer[0]);
+                                res.status(201).send(results);
                               }
-                            });
-
-                            let mailOptions = {
-                              from: "jeremy <jemyplu@gmail.com>", // sender address
-                              to: "supergrandma@yopmail.com", // list of receivers
-                              subject: "Coucou", // Subject line
-                              html: "<p>Aboule la recette mère grand</p>" // plain text body
-                            };
-                            smtpTransporter.sendMail(
-                              mailOptions,
-                              (error, response) => {
-                                if (error) {
-                                  return console.log(error);
-                                }
-                                console.log("message envoyé");
-
-                                res.send(response);
-                              }
-                            );
-                            res.status(201).send(results);
-                          }
+                            }
+                          );
                         }
                       );
                     } else {
