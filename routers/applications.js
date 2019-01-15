@@ -19,6 +19,8 @@ router.post("/answer", (req, res) => {
     if (!err) {
       const dataForm = {
         ...req.body,
+        id_offers: req.query.offer,
+        id_questions: req.query.question,
         id_candidates: decode.id,
         id: null,
         created_at: new Date(),
