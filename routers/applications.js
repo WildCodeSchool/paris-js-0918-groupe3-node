@@ -7,7 +7,7 @@ const jwt = require("jsonwebtoken");
 
 const jwtSecret = require("../secure/jwtSecret");
 const getToken = require("../helpers/getToken");
-const sendEmail = require("../helpers/sendEmail");
+const sendInfoEmail = require("../helpers/sendInfoEmail");
 /**
  * Allows to post answers for questions of an offer
  *
@@ -112,7 +112,7 @@ router.route("/status").put((req, res) => {
                               if (err) {
                                 res.status(500).send(err);
                               } else {
-                                sendEmail(company[0].email, candidate[0], offer[0]);
+                                sendInfoEmail(company[0].email, candidate[0], offer[0]);
                                 res.status(201).send(results);
                               }
                             }
