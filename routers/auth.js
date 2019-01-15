@@ -119,8 +119,6 @@ router
         };
         const sql = `INSERT INTO companies SET ?`;
         connection.query(sql, dataForm, (err, results) => {
-          console.log("VA DANS INSERT", sql);
-
           if (err) res.status(200).send({ error: err });
           else {
             const tokenInfo = {
@@ -129,8 +127,6 @@ router
               expiresIn: "1d"
             };
             jwt.sign(tokenInfo, jwtSecret, (err, Token) => {
-              console.log("VA DANS TOKEN", Token);
-
               const to = req.body.email;
               const url = `http://localhost:3002/api/auth/confirmation/${Token}`;
               if (!err) emailToken(to, url);
@@ -143,22 +139,64 @@ router
     });
   });
 
-router.get("/confirmation/:emailToken", (req, res) => {
+router
+  .route("/signup/candidates")
+
+  .post(upload.none(), (req, res) => {
+    console.log(req.body);
+    bcrypt.hash(req.body.password, 10, (crypErr, hash) => {
+      if (crypErr) res.sendStatus(500);
+      if (!emailRegex.test(req.body.email))
+        res.status(403).send("email non valide");
+      else {
+        const dataForm = {
+          email: req.body.email,
+          phone: req.body.phone,
+          id: null,
+          created_at: new Date(),
+          updated_at: new Date(),
+          is_active: 0,
+          password: hash
+        };
+        const sql = `INSERT INTO candidates SET ?`;
+
+        connection.query(sql, dataForm, (err, results) => {
+          if (err) res.status(200).send({ error: err });
+          else {
+            const tokenInfo = {
+              id: results.insertId,
+              userType: "candidates",
+              expiresIn: "1d"
+            };
+            jwt.sign(tokenInfo, jwtSecret, (err, Token) => {
+              const to = req.body.email;
+              const url = `http://localhost:3002/api/auth/confirmation/${Token}`;
+              if (!err) emailToken(to, url);
+              else {
+                console.log(err);
+              }
+            });
+
+            res.json({ id: results.insertId });
+          }
+        });
+      }
+    });
+  });
+
+/// Allows to set user active=true from the link sent in email  ///
+
+router.route("/confirmation/:emailToken").get((req, res) => {
   const token = req.params.emailToken;
   try {
-    console.log("lalilulelo", token);
     jwt.verify(token, jwtSecret, async (error, decode) => {
       if (!error) {
         const userType = decode.userType;
         const id = decode.id;
         const sql = `UPDATE ${userType} SET is_active=1  WHERE id=${id}`;
         await connection.query(sql, (err, results) => {
-          console.log("RESULST", results);
-          console.log("SQL", sql);
-
           if (err) results.status(403).send({ error: err });
           else {
-            console.log("ALL RIGHT");
           }
         });
       }
@@ -167,56 +205,6 @@ router.get("/confirmation/:emailToken", (req, res) => {
     res.send("error");
   }
   return res.json({ validation: "votre demande à bien été prise en compte" });
-});
-
-// .get("/confirmation/:emailToken", async (req, res) => {
-//   try {
-//     const data = { is_active: 1 };
-//     const {
-//       id: { id }
-//     } = jwt.verify(req.params.token, jwtSecret);
-//     const {
-//       userType: { userType }
-//     } = jwt.verify(req.params.token, jwtSecret);
-//     const sql = `UPDATE ${userType} SET ? WHERE id =${id}`;
-//     await connection.query(sql, data),
-//       (err, results) => {
-//         if (err) results.status(403).send({ error: err });
-//         else {
-//           results.sendStatus(200);
-//         }
-//       };
-//   } catch (e) {
-//     res.send("error");
-//   }
-//   return res.json({ is_active: 1 });
-// });
-
-router.route("/signup/candidates").post((req, res) => {
-  bcrypt.hash(req.body.password, 10, (crypErr, hash) => {
-    if (crypErr) res.sendStatus(500);
-    if (!emailRegex.test(req.body.email))
-      res.status(403).send("email non valide");
-    else {
-      const dataForm = {
-        email: req.body.email,
-        phone: req.body.phone,
-        id: null,
-        created_at: new Date(),
-        updated_at: new Date(),
-        is_active: 1,
-        password: hash
-      };
-      const sql = `INSERT INTO candidates SET ?`;
-
-      connection.query(sql, dataForm, (err, results) => {
-        if (err) res.status(200).send({ error: err });
-        else {
-          res.json({ id: results.insertId });
-        }
-      });
-    }
-  });
 });
 
 module.exports = router;
