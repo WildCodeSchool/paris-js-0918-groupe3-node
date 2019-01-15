@@ -116,7 +116,9 @@ router
           is_sent: req.body.is_sent,
           id_offers: req.params.id_offer,
           id_candidates: decode.id,
-          status: "waiting"
+          status: "waiting",
+          created_at: new Date(),
+          updated_at: new Date()
         };
         const sql = `INSERT INTO applications SET ?`;
         connection.query(sql, dataForm, (err, results) => {
