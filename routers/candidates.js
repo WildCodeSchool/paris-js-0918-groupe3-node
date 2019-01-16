@@ -1,8 +1,19 @@
-/**** imports *****/
+/**** Modules *****/
+
 const express = require("express");
-const connection = require("../config");
-const getToken = require("../helpers/getToken");
 const jwt = require("jsonwebtoken");
+const connection = require("../config");
+const knex = require("../dbconfig");
+
+/**** data Validation *****/
+
+const Ajv = require('ajv');
+const ajv = new Ajv();
+const putDataIsValid = ajv.compile(require('../ajv/schemas/putCandidate'));
+
+/**** imports *****/
+
+const getToken = require("../helpers/getToken");
 const jwtSecret = require("../secure/jwtSecret");
 
 const router = express.Router();
@@ -12,106 +23,78 @@ router
   /**
    * Sends candidate information from the id in Token
    */
-  .get((req, res) => {
+  .get(async (req, res) => {
     const token = getToken(req);
-    jwt.verify(token, jwtSecret, (err, decode) => {
-
-
-      if (!err) {
-        const sql = `
-        SELECT email, phone
-        FROM candidates
-        WHERE is_active
-        AND id=?`;
-        connection.query(sql, decode.id, (err, results) => {
-          if (err) {
-            res.status(500).send(`Erreur serveur : ${err}`);
-          } else {
-            res.send(results);
-          }
-        });
-      } else {
-        res.sendStatus(403);
-      }
-    });
+    const decode = jwt.verify(token, jwtSecret);
+    if (decode && decode.role === 'candidates') {
+      const results = await knex.select('email', 'phone').from('candidates').where({is_active:1, id: decode.id});
+      res.status(200).send(results);
+    } else {
+      res.sendStatus(401);
+    }
   })
 
-  .put((req, res) => {
-    const token = getToken(req);
-    jwt.verify(token, jwtSecret, (err, decode) => {
-
-      if (!err) {
+  .put(async (req, res) => {
+    if (!putDataIsValid(req.body)) res.status(400).send('données non valides');
+    else {
+      const token = getToken(req);
+      const decode = jwt.verify(token, jwtSecret);
+      if (decode && decode.role === 'candidates') {
         const dataForm = req.body;
-        const sql = `
-    UPDATE candidates 
-    SET ?
-    WHERE id = ?`;
-        connection.query(
-          sql,
-          [dataForm, decode.id],
-          (err, results) => {
-            if (err) {
-              res.status(500).send(`Erreur serveur : ${err}`);
-            } else {
-              res.send(results);
-            }
-          }
-        );
+        const result = await knex('candidates').update(dataForm).where({id: decode.id});
+        res.status(201).json(result);
       } else {
-        res.sendStatus(403);
+        res.sendStatus(401);
       }
-    });
+    }
   });
 
 router.route('/applications')
   /**
    * Sends applications of user from id in token.
    */
-  .get((req, res) => {
+  .get(async (req, res) => {
     const token = getToken(req);
-    jwt.verify(token, jwtSecret, (err, decode) => {
-      if (err || decode.role !== 'candidates') res.sendStatus(403);
-      else {
-        const sql = `
-          SELECT 
-            a.id_offers, a.status, a.updated_at, 
-            o.title, o.description, o.contract_type, o.updated_at, o.id_companies,
-            c.name, c.logo
-          FROM applications a, offers o, companies c
-          WHERE a.id_candidates = ? AND a.is_sent
-          AND a.id_offers = o.id
-          AND o.id_companies = c.id;`
-        connection.query(sql, decode.id, (err, results) => {
-          if (err) res.status(500).send(err);
-          else {
-            res.send(results)
-          }
-        });
-      }
-    });
+    const decode = jwt.verify(token, jwtSecret);
+    if (!decode || decode.role !== 'candidates') res.sendStatus(401);
+    else {
+      const result = await knex({
+        a: 'applications',
+        o: 'offers',
+        c: 'companies'
+      }).select({
+        id_offers: 'a.id_offers', status: 'a.status', applicationUpdated_at: 'a.updated_at',
+        title: 'o.title', description: 'o.description', contract_type: 'o.contract_type', offerUpdated_at: 'o.updated_at', id_companies: 'o.id_companies',
+        companyName: 'c.name', logo: 'c.logo',
+      }).where({
+        'a.id_candidates': decode.id,
+        'a.is_sent': 1,
+      }).whereRaw('a.id_offers = o.id')
+      .whereRaw('o.id_companies = c.id');
+      res.status(200).json(result);
+    }
   });
 
 router.route('/offer:id_offer/answers')
-  .get((req, res) => {
+  .get(async (req, res) => {
     const token = getToken(req);
     const { id_offer } = req.params;
-    jwt.verify(token, jwtSecret, (err, decode) => {
-      if (err || decode.role !== 'candidates') res.sendStatus(403);
-      else {
-        const sql = `
-          SELECT a.text answer, a.file_link, q.text question
-          FROM answers a, questions q
-          WHERE a.id_candidates = ?
-          AND a.id_offers = ?
-          AND a.id_questions = q.id;`;
-        connection.query(sql, [decode.id, id_offer], (err, result) => {
-          if (err) res.sendStatus(500);
-          else {
-            res.status(200).send(result);
-          }
-        });
-      }
-    });
+    const decode = jwt.verify(token, jwtSecret)
+    if (!decode || decode.role !== 'candidates') res.sendStatus(401);
+    else {
+      const result = await knex({
+        a: 'answers',
+        q: 'questions'
+      }).select({
+        answer: 'a.text',
+        file_link: 'a.file_link',
+        question: 'q.text',
+      }).where({
+        'a.id_candidates': decode.id,
+        'a.id_offers': id_offer,
+      }).whereRaw('a.id_questions = q.id');
+      res.status(200).json(result);
+    }
   });
 
 module.exports = router;
