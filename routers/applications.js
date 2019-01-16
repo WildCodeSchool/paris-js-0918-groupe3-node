@@ -1,22 +1,36 @@
-/**** imports *****/
+/**** Modules *****/
 
 const express = require("express");
-const connection = require("../config");
-const router = express.Router();
 const jwt = require("jsonwebtoken");
+const knex = require("../dbconfig");
+
+/**** data Validation *****/
+
+const Ajv = require('ajv');
+const ajv = new Ajv();
+const answerDataIsValid = ajv.compile(require('../ajv/schemas/answers'));
+const sendApplicationDataIsValid = ajv.compile(require('../ajv/schemas/sendApplication'));
+const statusApplicationDataIsValid = ajv.compile(require('../ajv/schemas/statusApplication'));
+
+/**** imports *****/
 
 const jwtSecret = require("../secure/jwtSecret");
 const getToken = require("../helpers/getToken");
 const sendEmail = require("../helpers/sendEmail");
+const getOfferDetails = require('../helpers/getOfferDetails');
+
+const router = express.Router();
+
 /**
  * Allows to post answers for questions of an offer
- *
- * !!!!! AJOUTER UPLOAD DE FICHIERS !!!!!
  */
-router.post("/answer", (req, res) => {
+router.route('/answer')
+.post(async (req, res) => {
   const token = getToken(req);
-  jwt.verify(token, jwtSecret, (err, decode) => {
-    if (!err) {
+  const decode = jwt.verify(token, jwtSecret);
+  if (!answerDataIsValid(req.body)) res.status(400).send('données non valides');
+  else {
+    if (decode) {
       const dataForm = {
         ...req.body,
         id_candidates: decode.id,
@@ -24,113 +38,61 @@ router.post("/answer", (req, res) => {
         created_at: new Date(),
         updated_at: new Date()
       };
-      const sql = `INSERT INTO answers SET ?`;
-      connection.query(sql, dataForm, (err, results) => {
-        if (err) {
-          res.status(500).send(`Erreur serveur : ${err}`);
-        } else {
-          res.json(results);
-        }
-      });
+      const result = await knex('answers').insert(dataForm);
+      res.status(201).send(result);
     } else {
-      res.sendStatus(403);
+      res.sendStatus(401);
     }
-  });
+  }  
 });
 
-router.route("/send").put((req, res) => {
-  const token = getToken(req);
-  const { id_candidates, id_offers } = req.body;
-  const dataForm = {
-    is_sent: 1
-  };
-  jwt.verify(token, jwtSecret, (err, decode) => {
-    if (
-      !err &&
-      decode.id === Number(id_candidates) &&
-      decode.role === "candidates"
-    ) {
-      const sql = `UPDATE applications SET ? WHERE id_candidates = ? AND id_offers = ?`;
-      connection.query(
-        sql,
-        [dataForm, id_candidates, id_offers],
-        (err, results) => {
-          if (err) res.sendStatus(500);
-          else res.status(201).send(results);
-        }
-      );
-    } else {
-      res.sendStatus(403);
-    }
-  });
-});
-
-/// Allows the company to change status for an application ///
-
-router.route("/status").put((req, res) => {
-  const token = getToken(req);
-  const { id_candidates, id_offers, status } = req.body;
-  if (status !== "validated" && status !== "rejected") {
-    res
-      .status(400)
-      .send('ERR : Status not valid please choose "validated" or "rejected"');
-  } else {
-    const dataForm = {
-      status
-    };
-    // Check company token
-    jwt.verify(token, jwtSecret, (err, decode) => {
-      if (err) res.sendStatus(403);
-      else {
-        const sqlGetIDComp = `SELECT id_companies, title, contract_type, place FROM offers WHERE id= ?`;
-        connection.query(sqlGetIDComp, id_offers, (err, offer) => {
-          if (err) res.status(500).send(err);
-          else {
-            // Checks if token id corresponds to the company the offers belongs to
-            if (offer[0].id_companies === decode.id) {
-              const sql = `UPDATE applications SET ? WHERE id_candidates = ? AND id_offers = ?`;
-              connection.query(
-                sql,
-                [dataForm, id_candidates, id_offers],
-                (err, results) => {
-                  if (err) res.status(500).send(err);
-                  else {
-                    // Allows the company to get the candidate info when application is validated //
-                    if (status === "validated") {
-                      const sqlGetCompanyInfo = `SELECT email FROM companies WHERE id=?`;
-                      connection.query(
-                        sqlGetCompanyInfo,
-                        decode.id,
-                        (err, company) => {
-                          const sqlGetCandidateInfo = `SELECT email, phone FROM candidates WHERE id =?`;
-                          connection.query(
-                            sqlGetCandidateInfo,
-                            id_candidates,
-                            (err, candidate) => {
-                              if (err) {
-                                res.status(500).send(err);
-                              } else {
-                                sendEmail(company[0].email, candidate[0], offer[0]);
-                                res.status(201).send(results);
-                              }
-                            }
-                          );
-                        }
-                      );
-                    } else {
-                      res.sendStatus(201);
-                    }
-                  }
-                }
-              );
-            } else {
-              res.sendStatus(403);
-            }
-          }
-        });
+/**
+ * Allow candidate to send an application unsent.
+ */
+router.route("/send")
+  .put(async (req, res) => {
+    if(!sendApplicationDataIsValid(req.body)) res.status(400).send('données non valides');
+    else {
+      const token = getToken(req);
+      const { id_offers } = req.body;
+      const dataForm = {
+        is_sent: 1,
+        updated_at: new Date(),
+      };
+      const decode = jwt.verify(token, jwtSecret);
+      if (decode.role === "candidates") {
+        const result = await knex('applications').update(dataForm).where({'id_candidates' : decode.id, 'id_offers': id_offers});
+        res.status(201).json(result);
+      } else {
+        res.sendStatus(403);
       }
-    });
-  }
-});
+    }
+  });
+
+
+  /**
+   * Allows the company to change status for an application ///
+   */
+router.route("/status")
+  .put(async (req, res) => {
+    if (!statusApplicationDataIsValid(req.body)) res.status(400).send('données non valides');
+    else {
+      const token = getToken(req);
+      const { id_candidates, id_offers, status } = req.body;
+      const dataForm = {status};
+      const decode = jwt.verify(token, jwtSecret);
+      const offer = await getOfferDetails(id_offers);
+      if (!decode || decode.role !== 'companies' || offer.id_companies !== decode.id) res.sendStatus(401);
+      else {
+        const result = await knex('applications').update(dataForm).where({'id_candidates': id_candidates, 'id_offers': id_offers});
+        if (status === "validated") {
+          const companyInfo = await knex.select('email').from('companies').where({id: decode.id});
+          const candidateInfo = await knex.select('email', 'phone').from('candidates').where({id: id_candidates});
+          sendEmail(companyInfo[0].email, candidateInfo[0], offer);
+        }
+        res.status(201).json(result);
+      }
+    }
+  });
 
 module.exports = router;

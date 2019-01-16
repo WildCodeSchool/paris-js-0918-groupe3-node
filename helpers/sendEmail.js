@@ -7,13 +7,13 @@ module.exports = (to, candidate, offer) => {
     service: `gmail`,
     host: "smtp.gmail.com",
     auth: {
-      user: `jemyplu@gmail.com`,
+      user: `c.ribault.dev@gmail.com`,
       pass: password
     }
   });
 
   let mailOptions = {
-    from: "jeremy <jemyplu@gmail.com>", // sender address
+    from: "christophe <c.ribault.dev@gmail.com>", // sender address
     to: to, // list of receivers
     subject: "Candidature validée", // Subject line
     html: `<p>Vous venez de valider la candidature de ce candidat: email : ${
