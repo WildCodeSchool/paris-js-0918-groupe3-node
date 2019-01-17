@@ -214,7 +214,7 @@ router.route("/confirmation/:emailToken").get((req, res) => {
 router
   .route("/newpassword/")
 
-  .get((req, res) => {
+  .post((req, res) => {
     const userType = req.body.userType;
     const email = req.body.email;
     const sql = `SELECT id from ?? WHERE email= ? AND is_active=1`;
