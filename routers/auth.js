@@ -195,8 +195,8 @@ router.route("/confirmation/:emailToken").get((req, res) => {
       if (!error) {
         const userType = decode.userType;
         const id = decode.id;
-        const sql = `UPDATE ${userType} SET is_active=1  WHERE id=${id}`;
-        await connection.query(sql, (err, results) => {
+        const sql = `UPDATE ?? SET is_active=1  WHERE id=?`;
+        await connection.query(sql, [userType, id], (err, results) => {
           if (err) results.status(403).send({ error: err });
           else {
           }
@@ -217,26 +217,25 @@ router
   .get((req, res) => {
     const userType = req.body.userType;
     const email = req.body.email;
-    const sql = `SELECT id from ${userType} WHERE email= ? AND is_active=1`;
-    connection.query(sql, email, (err, results) => {
+    const sql = `SELECT id from ?? WHERE email= ? AND is_active=1`;
+    connection.query(sql, [userType, email], (err, results) => {
       if (!err) {
         const tokenInfo = {
           id: results[0].id,
-          userType: "candidates",
-          email: email,
-          expiresIn: "1d"
+          userType,
+          email,
+          expiresIn: "1h"
         };
         jwt.sign(tokenInfo, jwtSecret, (err, Token) => {
           const to = email;
           const url = `http://localhost:3000/newpassword/${Token}`;
           if (!err) {
-            res.status(200);
             sendMail(newPassword(to, url));
+            res.sendStatus(200);
           } else {
             console.log(err);
           }
         });
-        sendMail();
       }
     });
   })
@@ -248,8 +247,8 @@ router
     jwt.verify(token, jwtSecret, (err, decode) => {
       /// Check if user's email in token exists du database ///
       const userType = decode.userType;
-      const sqlGet = `SELECT email from ${userType} WHERE id = ?`;
-      connection.query(sqlGet, decode.id, (err, results) => {
+      const sqlGet = `SELECT email FROM ?? WHERE id = ?`;
+      connection.query(sqlGet, [userType, decode.id], (err, results) => {
         if (!err && results[0].email === decode.email) {
           bcrypt.hash(req.body.password, 10, (crypErr, hash) => {
             if (crypErr) res.sendStatus(500);
@@ -264,7 +263,7 @@ router
                   if (err) {
                     res.status(500).send(`Erreur serveur : ${err}`);
                   } else {
-                    res.status(200).send(results);
+                    res.status(200).send(results.message);
                   }
                 }
               );
