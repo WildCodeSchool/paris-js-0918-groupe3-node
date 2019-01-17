@@ -7,7 +7,7 @@ module.exports = (to, candidate, offer) => {
     service: `gmail`,
     host: "smtp.gmail.com",
     auth: {
-      user: `dessinemoiunjob.com`,
+      user: `dessinemoiunjob@gmail.com`,
       pass: password
     }
   });
