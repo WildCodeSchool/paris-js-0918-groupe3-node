@@ -1,8 +1,18 @@
-/**** imports *****/
+/**** Modules *****/
 const express = require("express");
-const connection = require("../config");
-const getToken = require("../helpers/getToken");
 const jwt = require("jsonwebtoken");
+const knex = require("../dbconfig");
+const bcrypt = require("bcrypt");
+
+/**** data Validation *****/
+
+const Ajv = require('ajv');
+const ajv = new Ajv();
+const putDataIsValid = ajv.compile(require('../ajv/schemas/putCompanies'));
+
+/**** imports *****/
+
+const getToken = require("../helpers/getToken");
 const jwtSecret = require("../secure/jwtSecret");
 
 const router = express.Router();
@@ -12,45 +22,41 @@ router
   /**
    * Sends company information from the id in Token
    */
-  .get((req, res) => {
+  .get(async (req, res) => {
     const token = getToken(req);
-    jwt.verify(token, jwtSecret, (err, decode) => {
-      if (!err) {
-        const sql = `
-        SELECT name, siret, description, logo, link, email
-        FROM companies
-        WHERE is_active
-        AND id=?`;
-        connection.query(sql, decode.id, (err, results) => {
-          if (err) {
-            res.status(500).send(`Erreur serveur : ${err}`);
-          } else {
-            res.send(results);
-          }
+    const decode = jwt.verify(token, jwtSecret)
+    if (decode && decode.role === "companies") {
+      const result = await knex
+        .select('name', 'siret', 'description', 'logo', 'link', 'email')
+        .from('companies')
+        .where({
+          'is_active': 1,
+          'id': decode.id,
         });
-      } else {
-        res.status(403).json({ token });
-      }
-    });
+      res.status(200).send(result);
+    } else {
+      res.status(401).json({ token });
+    }
   })
 
-  .put((req, res) => {
-    const dataForm = req.body;
-    const sql = `
-    UPDATE companies 
-    SET ?
-    WHERE id = ?`;
-    connection.query(
-      sql,
-      [dataForm, req.params.id_companies],
-      (err, results) => {
-        if (err) {
-          res.status(500).send(`Erreur serveur : ${err}`);
-        } else {
-          res.send(req.body);
-        }
+  .put(async (req, res) => {
+    if (!putDataIsValid(req.body)) res.status(400).send('données non valides');
+    else {
+      const dataForm = {...req.body, updated_at: new Date()};
+      if (req.body.password) 
+        dataForm.password = await bcrypt.hash(req.body.password, 10);
+      const token = getToken(req);
+      const decode = jwt.verify(token, jwtSecret);
+      if (decode && decode.role === 'companies') {
+        const result = await knex('companies').update(dataForm).where({'id': decode.id});
+        res.status(201).json({
+          result,
+          updated : req.body,
+        });
+      } else {
+        res.sendStatus(401);
       }
-    );
+    }
   });
 
 module.exports = router;

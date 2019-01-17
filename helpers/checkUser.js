@@ -9,7 +9,7 @@ const knex = require('../dbconfig');
  * @returns {Boolean} true if email found in db and password matches.
  */
 const checkUser = async (email, password, userType) => {
-  const user = await knex.select('id', 'password').from(userType).where({email});
+  const user = await knex.select('id', 'password').from(userType).where({email, 'is_active': 1});
   if(!user.length) return {
     match: false,
     id: undefined,

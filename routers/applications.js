@@ -69,7 +69,6 @@ router.route("/send")
     }
   });
 
-
   /**
    * Allows the company to change status for an application ///
    */
