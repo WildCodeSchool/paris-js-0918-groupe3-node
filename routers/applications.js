@@ -68,7 +68,7 @@ router.route("/send").put((req, res) => {
   });
 });
 
-/// Allows the company to change status for an application ///
+/// Allows the company to change status for an application and send an email ///
 
 router.route("/status").put((req, res) => {
   const token = getToken(req);
