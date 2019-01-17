@@ -9,7 +9,8 @@ const connection = require("../config");
 const jwtSecret = require("../secure/jwtSecret");
 const router = express.Router();
 const getFileExtension = require("../helpers/getFileExtension");
-const emailToken = require("../helpers/emailToken");
+const sendMail = require("../helpers/sendMail");
+const tokenSignIN = require("../helpers/mailTemplates/sendTokenSignIn");
 
 const emailRegex = require("../secure/emailRegex");
 
@@ -129,7 +130,7 @@ router
             jwt.sign(tokenInfo, jwtSecret, (err, Token) => {
               const to = req.body.email;
               const url = `http://localhost:3002/api/auth/confirmation/${Token}`;
-              if (!err) emailToken(to, url);
+              if (!err) sendMail(tokenSignIN(to, url));
             });
 
             res.json({ id: results.insertId });
@@ -143,7 +144,6 @@ router
   .route("/signup/candidates")
 
   .post(upload.none(), (req, res) => {
-    console.log(req.body);
     bcrypt.hash(req.body.password, 10, (crypErr, hash) => {
       if (crypErr) res.sendStatus(500);
       if (!emailRegex.test(req.body.email))
@@ -171,7 +171,7 @@ router
             jwt.sign(tokenInfo, jwtSecret, (err, Token) => {
               const to = req.body.email;
               const url = `http://localhost:3002/api/auth/confirmation/${Token}`;
-              if (!err) emailToken(to, url);
+              if (!err) sendMail(tokenSignIN(to, url));
               else {
                 console.log(err);
               }
