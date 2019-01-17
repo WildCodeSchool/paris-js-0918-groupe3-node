@@ -6,6 +6,7 @@ const multer = require("multer");
 const fs = require("fs");
 
 const connection = require("../config");
+const getToken = require("../helpers/getToken");
 const jwtSecret = require("../secure/jwtSecret");
 const router = express.Router();
 const getFileExtension = require("../helpers/getFileExtension");
@@ -222,7 +223,7 @@ router
         const tokenInfo = {
           id: results[0].id,
           userType: "candidates",
-          email:email,
+          email: email,
           expiresIn: "1d"
         };
         jwt.sign(tokenInfo, jwtSecret, (err, Token) => {
@@ -240,35 +241,39 @@ router
     });
   })
 
+
+  /// Allows to change password ///
+  
   .put((req, res) => {
     const token = getToken(req);
     jwt.verify(token, jwtSecret, (err, decode) => {
-      const userType = decode.userType
-      const sqlGet = `SELECT email from ${userType} WHERE id = ?`
-      connection.query(sqlGet,decode.id, (err, results)=>{
+      const userType = decode.userType;
+      const sqlGet = `SELECT email from ${userType} WHERE id = ?`;
+      connection.query(sqlGet, decode.id, (err, results) => {
         if (!err && results[0].email === decode.email) {
           bcrypt.hash(req.body.password, 10, (crypErr, hash) => {
             if (crypErr) res.sendStatus(500);
-            else { 
-              const password = hash
+            else {
+              const password = hash;
               const sqlPut = `UPDATE ?? SET ? WHERE id =?`;
-            connection.query(sqlPut, [userType, {password}, decode.id], (err, results) => {
-              if (err) {
-                res.status(500).send(`Erreur serveur : ${err}`);
-              } else {
-                res.status(200).send(results)
-              }
-            });}
-          })
-         
-        }else{
-          res.status(401).send(`Erreur : ${err}`)
+              connection.query(
+                sqlPut,
+                [userType, { password }, decode.id],
+                (err, results) => {
+                  if (err) {
+                    res.status(500).send(`Erreur serveur : ${err}`);
+                  } else {
+                    res.status(200).send(results);
+                  }
+                }
+              );
+            }
+          });
+        } else {
+          res.status(401).send(`Erreur : ${err}`);
         }
-      })
+      });
     });
   });
 
 module.exports = router;
-
-
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MzEsInVzZXJUeXBlIjoiY2FuZGlkYXRlcyIsImVtYWlsIjoiamVteXBsdUBnbWFpbC5jb20iLCJleHBpcmVzSW4iOiIxZCIsImlhdCI6MTU0NzcyMTc2NX0.nau4XG38hSwXLSpMrB7a2XyVXuPficLKuK6nBHln-3E
