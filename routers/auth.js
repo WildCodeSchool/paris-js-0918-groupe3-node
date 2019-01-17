@@ -6,11 +6,13 @@ const multer = require("multer");
 const fs = require("fs");
 
 const connection = require("../config");
+const getToken = require("../helpers/getToken");
 const jwtSecret = require("../secure/jwtSecret");
 const router = express.Router();
 const getFileExtension = require("../helpers/getFileExtension");
 const sendMail = require("../helpers/sendMail");
 const tokenSignIN = require("../helpers/mailTemplates/sendTokenSignIn");
+const newPassword = require("../helpers/mailTemplates/newPassword");
 
 const emailRegex = require("../secure/emailRegex");
 
@@ -206,5 +208,73 @@ router.route("/confirmation/:emailToken").get((req, res) => {
   }
   return res.json({ validation: "votre demande à bien été prise en compte" });
 });
+
+/// Allows to send an email with new token to allow to change the password ///
+
+router
+  .route("/newpassword/")
+
+  .get((req, res) => {
+    const userType = req.body.userType;
+    const email = req.body.email;
+    const sql = `SELECT id from ${userType} WHERE email= ? AND is_active=1`;
+    connection.query(sql, email, (err, results) => {
+      if (!err) {
+        const tokenInfo = {
+          id: results[0].id,
+          userType: "candidates",
+          email: email,
+          expiresIn: "1d"
+        };
+        jwt.sign(tokenInfo, jwtSecret, (err, Token) => {
+          const to = email;
+          const url = `http://localhost:3000/newpassword/${Token}`;
+          if (!err) {
+            res.status(200);
+            sendMail(newPassword(to, url));
+          } else {
+            console.log(err);
+          }
+        });
+        sendMail();
+      }
+    });
+  })
+
+  /// Allows to change password ///
+
+  .put((req, res) => {
+    const token = getToken(req);
+    jwt.verify(token, jwtSecret, (err, decode) => {
+      /// Check if user's email in token exists du database ///
+      const userType = decode.userType;
+      const sqlGet = `SELECT email from ${userType} WHERE id = ?`;
+      connection.query(sqlGet, decode.id, (err, results) => {
+        if (!err && results[0].email === decode.email) {
+          bcrypt.hash(req.body.password, 10, (crypErr, hash) => {
+            if (crypErr) res.sendStatus(500);
+            else {
+              /// SET the new password ///
+              const password = hash;
+              const sqlPut = `UPDATE ?? SET ? WHERE id =?`;
+              connection.query(
+                sqlPut,
+                [userType, { password }, decode.id],
+                (err, results) => {
+                  if (err) {
+                    res.status(500).send(`Erreur serveur : ${err}`);
+                  } else {
+                    res.status(200).send(results);
+                  }
+                }
+              );
+            }
+          });
+        } else {
+          res.status(401).send(`Erreur : ${err}`);
+        }
+      });
+    });
+  });
 
 module.exports = router;
