@@ -241,12 +241,12 @@ router
     });
   })
 
-
   /// Allows to change password ///
-  
+
   .put((req, res) => {
     const token = getToken(req);
     jwt.verify(token, jwtSecret, (err, decode) => {
+      /// Check if user's email in token exists du database ///
       const userType = decode.userType;
       const sqlGet = `SELECT email from ${userType} WHERE id = ?`;
       connection.query(sqlGet, decode.id, (err, results) => {
@@ -254,6 +254,7 @@ router
           bcrypt.hash(req.body.password, 10, (crypErr, hash) => {
             if (crypErr) res.sendStatus(500);
             else {
+              /// SET the new password ///
               const password = hash;
               const sqlPut = `UPDATE ?? SET ? WHERE id =?`;
               connection.query(
