@@ -206,7 +206,7 @@ router.route("/confirmation/:emailToken").get((req, res) => {
   } catch (e) {
     res.send("error");
   }
-  return res.json({ validation: "votre demande à bien été prise en compte" });
+  return res.redirect(`http://localhost:3000/`);
 });
 
 /// Allows to send an email with new token to allow to change the password ///
