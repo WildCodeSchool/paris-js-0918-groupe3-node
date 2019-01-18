@@ -2,7 +2,6 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const multer = require("multer");
 const fs = require("fs");
 
 const connection = require("../config");
@@ -13,26 +12,9 @@ const getFileExtension = require("../helpers/getFileExtension");
 const sendMail = require("../helpers/sendMail");
 const tokenSignIN = require("../helpers/mailTemplates/sendTokenSignIn");
 const newPassword = require("../helpers/mailTemplates/newPassword");
+const upload = require("../helpers/multer");
 
 const emailRegex = require("../secure/emailRegex");
-
-const upload = multer({
-  dest: "tmp/",
-  fileFilter: (req, file, cb) => {
-    if (
-      !(
-        file.mimetype.includes("image/png") ||
-        file.mimetype.includes("image/jpg")
-      )
-    ) {
-      cb(new Error("Mauvais format de fichier"));
-    }
-    cb(null, true);
-  },
-  limits: {
-    fileSize: 3 * 1024 * 1024
-  }
-});
 
 router
   .route("/signin/:userType")
