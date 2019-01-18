@@ -3,11 +3,13 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const morgan = require('morgan');
 
 const port = process.env.PORT || 3002;
 
 /**** modules use *****/
 app.use(cors());
+app.use(morgan('tiny'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
   extended: true

@@ -12,7 +12,6 @@ const postApplicationDataIsValid = ajv.compile(require('../ajv/schemas/postAppli
 
 /**** imports *****/
 
-const connection = require("../config");
 const getToken = require("../helpers/getToken");
 const jwtSecret = require("../secure/jwtSecret");
 

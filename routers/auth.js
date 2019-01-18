@@ -76,6 +76,7 @@ router.route('/signup/companies')
 router.route('/signup/candidates')
   .post(async (req, res) => {
     const { password, email, phone } = req.body;
+    console.log(req.body)
     if (!candidateDataIsValid(req.body))
       res.status(400).send("données non valides");
     else {

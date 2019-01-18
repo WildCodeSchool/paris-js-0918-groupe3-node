@@ -2,7 +2,6 @@
 
 const express = require("express");
 const jwt = require("jsonwebtoken");
-const connection = require("../config");
 const knex = require("../dbconfig");
 
 /**** data Validation *****/
