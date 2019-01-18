@@ -28,6 +28,7 @@ router
    * (?questions=1,2,3,4,5,6)
    */
   .post(async (req, res) => {
+    console.log(req.body)
     if(!postOfferDataIsValid(req.body)) res.status(400).send('données non valides');
     else {
       const token = getToken(req);

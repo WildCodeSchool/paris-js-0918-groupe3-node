@@ -18,6 +18,7 @@ const jwtSecret = require("../secure/jwtSecret");
 const getToken = require("../helpers/getToken");
 const sendEmail = require("../helpers/sendEmail");
 const getOfferDetails = require('../helpers/getOfferDetails');
+const applicationValidated = require('../helpers/mailTemplates/applicationValidated');
 
 const router = express.Router();
 
@@ -87,7 +88,7 @@ router.route("/status")
         if (status === "validated") {
           const companyInfo = await knex.select('email').from('companies').where({id: decode.id});
           const candidateInfo = await knex.select('email', 'phone').from('candidates').where({id: id_candidates});
-          sendEmail(companyInfo[0].email, candidateInfo[0], offer);
+          sendEmail(applicationValidated(companyInfo[0].email, candidateInfo[0], offer));
         }
         res.status(201).json(result);
       }

@@ -20,6 +20,10 @@ const jwtSecret = require("../secure/jwtSecret");
 const getFileExtension = require("../helpers/getFileExtension");
 const checkUser = require('../helpers/checkUser');
 const upload = require('../helpers/upload');
+const sendEmail = require('../helpers/sendEmail');
+const getToken = require('../helpers/getToken');
+const tokenSignUp = require("../helpers/mailTemplates/sendTokenSignUp");
+const newPassword = require('../helpers/mailTemplates/newPassword');
 
 const router = express.Router();
 
@@ -59,24 +63,31 @@ router.route('/signup/companies')
           req.file ?
           `public/logoCompanies/logo_${name.trim().replace(" ", "_")}_${Date.now()}.${getFileExtension(req.file.mimetype)}`:
           '';
-        const dataForm = {name, siret, logo:newPath, link, email, description, password: hash, is_active:1, id: null, created_at: new Date(), updated_at: new Date()};
+        const dataForm = {name, siret, logo:newPath, link, email, description, password: hash, is_active:0, id: null, created_at: new Date(), updated_at: new Date()};
         if (req.file) {
           fs.rename(req.file.path, newPath, err => {
             if (err) console.log(err);
           });
         }
         const results = await knex('companies').insert(dataForm);
+        const tokenInfo = {
+          id: results[0],
+          role: 'companies',
+          expiresIn: '1d',
+        }
+        const token = jwt.sign(tokenInfo, jwtSecret);
+        sendEmail(tokenSignUp(email, `http://localhost:3002/api/auth/confirmation/${token}`));
         res.status(201).send(results);
       } catch(error) {
+        console.log(error)
         res.status(400).send(error);
       }
     }
   });
 
 router.route('/signup/candidates')
-  .post(async (req, res) => {
+  .post(upload.none(), async (req, res) => {
     const { password, email, phone } = req.body;
-    console.log(req.body)
     if (!candidateDataIsValid(req.body))
       res.status(400).send("données non valides");
     else {
@@ -90,5 +101,53 @@ router.route('/signup/candidates')
       }
     }
   });
+
+router.route('/confirmation/:token')
+  .get(async (req, res) => {
+    const { token } = req.params;
+    const decode = jwt.verify(token, jwtSecret);
+    if (!decode) res.sendStatus(403);
+    else {
+      const { role, id } = decode;
+      await knex(role).update({'is_active':1}).where({'id': id});
+      res.redirect('http://localhost:3000');
+    }
+  });
+
+router.route('/newPassword')
+  .post(async (req, res) => {
+    try {
+      const {email, userType} = req.body;
+      const result = await knex.select('id').from(userType).where({'email': email, 'is_active':1});
+      const tokenInfo = {
+        id: result[0].id,
+        userType,
+        email,
+        expiresIn: '1h',
+      };
+      const token = jwt.sign(tokenInfo, jwtSecret);
+      sendEmail(newPassword(email, `http://localhost:3000/newpassword/${token}`));
+      res.sendStatus(200);
+    } catch (error) {
+      console.log(error);
+      res.sendStatus(400);
+    }
+  })
+
+  .put(async (req, res) => {
+    const token = getToken(req);
+    const decode = jwt.verify(token, jwtSecret);
+    const { userType, id, email } = decode;
+    const { password } = req.body;
+    const result = await knex.select('email').from(userType).where({'id': id});
+    if(result[0].email === email) {
+      const hash = await bcrypt.hash(password, 10);
+      await knex(userType).update({password: hash}).where({'id': id});
+      res.sendStatus(201);
+    } else {
+      res.sendStatus(401);
+    }
+  })
+
 
 module.exports = router;

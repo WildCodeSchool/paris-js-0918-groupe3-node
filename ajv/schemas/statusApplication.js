@@ -4,10 +4,10 @@ module.exports = {
   "required" : ["id_offers", "id_candidates", "status"],
   "properties": {
     "id_offers" : {
-      "type": "string",
+      "type": ["number","string"],
     },
     "id_candidates" : {
-      "type": "string",
+      "type": ["number","string"],
     },
     "status": {
       "type": "string",

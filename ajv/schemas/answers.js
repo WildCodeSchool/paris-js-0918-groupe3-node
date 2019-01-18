@@ -1,5 +1,5 @@
 module.exports = {
-  "maxProperties" : 3,
+  "maxProperties" : 4,
   "minProperties" : 3,
   "required" : ["text", "id_questions", "id_offers"],
   "properties": {

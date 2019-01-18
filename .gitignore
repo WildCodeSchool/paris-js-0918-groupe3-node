@@ -1,6 +1,7 @@
 dbconfig.js
 config.js
 package-lock.json
+.env
 
 # Logs
 logs

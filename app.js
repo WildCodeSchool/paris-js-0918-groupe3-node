@@ -9,7 +9,7 @@ const port = process.env.PORT || 3002;
 
 /**** modules use *****/
 app.use(cors());
-app.use(morgan('tiny'));
+app.use(morgan('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
   extended: true

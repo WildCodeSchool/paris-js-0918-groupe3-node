@@ -17,10 +17,7 @@ module.exports = {
       "type" : "string",
     },
     "is_published" : {
-      "type" : "string",
-      "minLength": 1,
-      "maxLength": 1,
-      "pattern": "0|1",
+      "type" : ["boolean", "number", "string"],
     },
   },
 };
