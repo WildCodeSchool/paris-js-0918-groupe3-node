@@ -16,8 +16,8 @@ const statusApplicationDataIsValid = ajv.compile(require('../ajv/schemas/statusA
 
 const jwtSecret = require("../secure/jwtSecret");
 const getToken = require("../helpers/getToken");
-const sendEmail = require("../helpers/sendEmail");
-const getOfferDetails = require('../helpers/getOfferDetails');
+// const sendMail = require("../helpers/sendMail");
+// const validation = (require("../helpers/mailTemplates/applicationValidated"))
 
 const router = express.Router();
 
@@ -87,7 +87,7 @@ router.route("/status")
         if (status === "validated") {
           const companyInfo = await knex.select('email').from('companies').where({id: decode.id});
           const candidateInfo = await knex.select('email', 'phone').from('candidates').where({id: id_candidates});
-          sendEmail(companyInfo[0].email, candidateInfo[0], offer);
+          // sendMail(validation(company[0].email, candidate[0], offer[0]));
         }
         res.status(201).json(result);
       }
