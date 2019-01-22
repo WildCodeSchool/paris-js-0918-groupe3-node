@@ -3,6 +3,8 @@ module.exports = (to, url) => {
       from: "DmJ <dessinemoiunjob@gmail.com>", // sender address
       to: to, // list of receivers
       subject: "Demande de nouveau mot de passe", // Subject line
-      html: `<p>Modifiez votre mot de passe cliquant sur le lien suivant : <a href="${url}">CLIQUEZ ICI</a> </p>`
+      html: `<h2>Bonjour,</h2>
+      <h3>Vous souhaitez modifier votre mot de passe</h3>
+      <p>Vous pouvez cliquer sur ce lien : <a href="${url}">MODIFIER MON MOT DE PASSE</a></p>`
   };
 };

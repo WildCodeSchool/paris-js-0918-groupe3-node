@@ -3,10 +3,10 @@ module.exports = (to, candidate, offer) => {
     from: "DmJ <dessinemoiunjob@gmail.com>",
     to: to,
     subject: "Candidature validée",
-    html: `<p>Vous venez de valider la candidature de ce candidat: email : ${
-      candidate.email
-    } téléphone : ${candidate.phone} pour l'offre : ${offer.title} en ${
-      offer.contract_type
-    } à ${offer.place}</p>`
+    html: `<h2>Bonjour,</h2>
+    <h4>Vous venez de valider la candidature de ce candidat:</h4>
+    <p>Email : <b>${candidate.email}</b>
+      <br/>Téléphone : <b>${candidate.phone}</b>
+      <br/>concernant l'offre : <b>${offer.title}</b> en <b>${offer.contract_type}</b> à <b>${offer.place}</b></p>`
   };
 };

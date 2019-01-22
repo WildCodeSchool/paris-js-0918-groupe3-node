@@ -3,6 +3,8 @@ module.exports = (to, url) => {
       from: " DmJ <dessinemoiunjob@gmail.com>", // sender address
       to: to, // list of receivers
       subject: "Validation inscription", // Subject line
-      html: `<p>Veuillez confirmer votre adresse mail en cliquant sur le lien suivant : <a href="${url}">CLIQUEZ ICI</a> </p>`
+      html: `<h2>Bonjour,</h2>
+      <h3>Bienvenur sur Dessine-moi un job</h3>
+      <p>Veuillez confirmer votre adresse mail en cliquant sur ce lien : <a href="${url}">VALIDER MON EMAIL</a></p>`
   };
 };
