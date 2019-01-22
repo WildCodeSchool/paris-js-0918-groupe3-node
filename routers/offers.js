@@ -20,7 +20,7 @@ router
    */
   .post((req, res) => {
     console.log(req.body, "REQBODY");
-    
+
     const token = getToken(req);
     jwt.verify(token, jwtSecret, (err, decode) => {
       if (!err) {
@@ -57,7 +57,7 @@ router
             }
 
             const sqlQuestions = `
-              INSERT INTO offers_questions (id_offers, id_questions) 
+              INSERT INTO offers_questions (id_offers, id_questions)
               VALUES ${sqlQuestionsValues.join(`, `)}`;
             connection.query(sqlQuestions, (err2, results2) => {
               if (err2) {
@@ -83,8 +83,8 @@ router
       if (!err) {
         const sql = `
           SELECT id, title, description, contract_type, is_active, is_published, id_companies, updated_at
-          FROM offers 
-          WHERE id_companies=? 
+          FROM offers
+          WHERE id_companies=?
           AND is_active=?`;
         connection.query(
           sql,
@@ -146,10 +146,10 @@ router
         if (err) {
           res.status(500).send(`Erreur serveur : ${err}`);
         } else {
-          if (results[0].id_companies === decode.id) {
+          try { if (results[0].id_companies === decode.id) {
             const sqlIdOk = `
-              SELECT 
-                app.id_candidates, app.status status_application, 
+              SELECT
+                app.id_candidates, app.status status_application,
                 ans.text answers_text, ans.file_link, ans.updated_at, ans.id_candidates,
                 q.text question_text
               FROM applications app, answers ans, questions q
@@ -161,7 +161,10 @@ router
           } else {
             res.sendStatus(403)
           }
+        }catch(e){
+          console.log(e);
         }
+      }
       });
     })
   })
@@ -178,7 +181,7 @@ router.get("/search", (req, res) => {
   placeEsc = connection.escape(`%${place}%`);
   const sql = `
       SELECT id, title, description, contract_type, place, id_companies, updated_at
-      FROM offers 
+      FROM offers
       WHERE is_active=1
       AND is_published=1
       ${search ? "AND title LIKE" + searchEsc : ""}
@@ -230,7 +233,7 @@ router.get("/details/:id_offers", (req, res) => {
       res.status(500).send(`Erreur serveur : ${errOffer}`);
     } else {
       const sqlQuestions = `
-        SELECT id_questions 
+        SELECT id_questions
         FROM offers_questions
         WHERE id_offers= ?`;
       connection.query(
