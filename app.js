@@ -29,6 +29,7 @@ const auth = require('./routers/auth');
 
 /**** routes *****/
 
+app.use('/public', express.static('public'));
 app.use(`${version}/questions`, questions);
 app.use(`${version}/offers`, offers);
 app.use(`${version}/companies`, companies);
