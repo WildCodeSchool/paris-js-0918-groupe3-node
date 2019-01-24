@@ -1,5 +1,4 @@
 module.exports = {
-  "maxProperties" : 7,
   "minProperties" : 6,
   "required" : ["email", "name", "password", "description", "link", "siret"],
   "properties": {

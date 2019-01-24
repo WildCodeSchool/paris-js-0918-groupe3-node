@@ -4,6 +4,7 @@ exports.up = function(knex, Promise) {
     table.increments();
     table.string('email').notNullable().unique();
     table.string('phone').notNullable().unique();
+    table.string('password').notNullable();
     table.boolean('is_active').notNullable().defaultsTo(true);
     table.timestamps(true, true);
   });

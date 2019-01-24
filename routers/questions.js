@@ -1,6 +1,6 @@
 /**** imports *****/
 const express = require('express');
-const knex = require('../dbconfig');
+const knex = require("../db/knex");
 
 /**** data Validation *****/
 

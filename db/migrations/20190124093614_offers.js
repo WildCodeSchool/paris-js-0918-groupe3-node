@@ -14,7 +14,7 @@ exports.up = function(knex, Promise) {
     table.string('place').notNullable();
     table.boolean('is_active').notNullable().defaultsTo(true);
     table.boolean('is_published').notNullable().defaultsTo(true);
-    table.date('valid_until').notNullable();
+    table.date('valid_until');
     table.timestamps(true, true);
   });
 };

@@ -3,6 +3,7 @@ exports.up = function(knex, Promise) {
   return knex.schema.createTable('companies', (table) => {
     table.increments();
     table.string('name').notNullable();
+    table.string('siret').notNullable();
     table.string('password').notNullable();
     table.text('description');
     table.string('logo');

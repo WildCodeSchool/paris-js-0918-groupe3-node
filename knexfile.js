@@ -1,4 +1,5 @@
 // Update with your config settings.
+require('dotenv').config();
 
 module.exports = {
 
@@ -7,7 +8,7 @@ module.exports = {
     connection: {
       host : 'localhost',
       user : 'root',
-      password : 'Naza10092011+',
+      password : process.env.DB_PASS,
       database : 'dessine_moi_un_job'
     },
     migrations: {
@@ -22,8 +23,8 @@ module.exports = {
     client: 'postgresql',
     connection: {
       database: 'my_db',
-      user:     'username',
-      password: 'password'
+      user:     '',
+      password: process.env.DB_PASS,
     },
     migrations: {
       directory: __dirname + '/db/migrations',

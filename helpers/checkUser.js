@@ -1,5 +1,5 @@
 const bcrypt = require('bcrypt');
-const knex = require('../dbconfig');
+const knex = require("../db/knex");
 
 /**
  * Checks if email exists and is password matches.
