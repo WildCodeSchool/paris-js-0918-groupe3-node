@@ -158,12 +158,15 @@ router.get("/search", async (req, res) => {
   const { search, type, place } = req.query;
   const searchLike = search ? `%${search}%` : '%%';
   const placeLike = place ? `%${place}%`: '%%';
-  const results = await knex
-    .select('id', 'title', 'description', 'contract_type', 'place', 'id_companies', 'updated_at')
-    .from('offers')
-    .where({'is_active':1, 'is_published':1})
-    .andWhere('title', 'like', searchLike)
-    .andWhere('place', 'like', placeLike)
+  const results = await knex({
+    o: 'offers',
+    c: 'companies',
+  })
+    .select('o.id', 'o.title', 'o.description', 'o.contract_type', 'o.place', 'o.id_companies', 'o.updated_at', 'c.logo', 'c.name')
+    .where({'o.is_active':1, 'o.is_published':1})
+    .andWhere('o.title', 'like', searchLike)
+    .andWhere('o.place', 'like', placeLike)
+    .whereRaw('o.id_companies = c.id')
   res.status(200).send(results.filter(o => o.contract_type === type || !type || type === 'Tous'));  
 });
 
