@@ -1,4 +1,4 @@
-const knex = require('../dbconfig');
+const knex = require("../db/knex");
 
 module.exports = async (id_offer) => {
   const result = await 

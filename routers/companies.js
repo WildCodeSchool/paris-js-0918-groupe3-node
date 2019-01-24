@@ -1,7 +1,7 @@
 /**** Modules *****/
 const express = require("express");
 const jwt = require("jsonwebtoken");
-const knex = require("../dbconfig");
+const knex = require("../db/knex");
 const bcrypt = require("bcrypt");
 
 /**** data Validation *****/

@@ -1,8 +1,10 @@
 /**** modules *****/
+require("dotenv").config();
 const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const fs = require("fs");
+const knex = require("../db/knex");
 
 /**** data Validation *****/
 
@@ -15,7 +17,6 @@ const candidateDataIsValid = ajv.compile(signupCandidates);
 
 /**** imports *****/
 
-const knex = require("../dbconfig");
 const jwtSecret = require("../secure/jwtSecret");
 const getFileExtension = require("../helpers/getFileExtension");
 const checkUser = require('../helpers/checkUser');
@@ -24,6 +25,8 @@ const sendEmail = require('../helpers/sendEmail');
 const getToken = require('../helpers/getToken');
 const tokenSignUp = require("../helpers/mailTemplates/sendTokenSignUp");
 const newPassword = require('../helpers/mailTemplates/newPassword');
+
+const domain = process.env.DOMAIN_NAME;
 
 const router = express.Router();
 
@@ -55,7 +58,7 @@ router.route('/signup/companies')
   .post(upload.single('logo'), async (req, res) => {
     const { name, siret, link, email, description, password } = req.body;
     if (!companyDataIsValid(req.body))
-      res.status(400).send("données non valides");
+        res.status(400).send("données non valides");
     else {
       try {
         const hash = await bcrypt.hash(password, 10);
@@ -76,7 +79,7 @@ router.route('/signup/companies')
           expiresIn: '1d',
         }
         const token = jwt.sign(tokenInfo, jwtSecret);
-        sendEmail(tokenSignUp(email, `http://localhost:3002/api/auth/confirmation/${token}`));
+        sendEmail(tokenSignUp(email, `${domain}auth/confirmation/${token}`));
         res.status(201).send(results);
       } catch(error) {
         console.log(error)
@@ -89,7 +92,8 @@ router.route('/signup/candidates')
   .post(upload.none(), async (req, res) => {
     const { password, email, phone } = req.body;
     if (!candidateDataIsValid(req.body))
-      res.status(400).send("données non valides");
+      {console.log('non valide')
+        res.status(400).send("données non valides");}
     else {
       try {
         const hash = await bcrypt.hash(password, 10);
@@ -98,6 +102,7 @@ router.route('/signup/candidates')
         res.status(201).send(result);
       } catch (error) {
         res.sendStatus(400);
+        console.log(error)
       }
     }
   });
