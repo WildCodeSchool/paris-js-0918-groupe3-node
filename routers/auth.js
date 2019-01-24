@@ -3,6 +3,7 @@ const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const fs = require("fs");
+const knex = require("../db/knex");
 
 /**** data Validation *****/
 
@@ -15,7 +16,6 @@ const candidateDataIsValid = ajv.compile(signupCandidates);
 
 /**** imports *****/
 
-const knex = require("../dbconfig");
 const jwtSecret = require("../secure/jwtSecret");
 const getFileExtension = require("../helpers/getFileExtension");
 const checkUser = require('../helpers/checkUser');
@@ -55,7 +55,8 @@ router.route('/signup/companies')
   .post(upload.single('logo'), async (req, res) => {
     const { name, siret, link, email, description, password } = req.body;
     if (!companyDataIsValid(req.body))
-      res.status(400).send("données non valides");
+      {console.log(req.body)
+        res.status(400).send("données non valides");}
     else {
       try {
         const hash = await bcrypt.hash(password, 10);
