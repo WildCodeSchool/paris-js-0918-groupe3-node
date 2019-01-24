@@ -17,6 +17,7 @@ app.use(bodyParser.urlencoded({
   extended: true
 }));
 app.use(morgan('dev'));
+app.use('/public', express.static('public')); 
 
 /**** routers *****/
 
