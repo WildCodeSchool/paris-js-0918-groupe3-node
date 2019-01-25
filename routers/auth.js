@@ -82,7 +82,6 @@ router.route('/signup/companies')
         sendEmail(tokenSignUp(email, `${domain}auth/confirmation/${token}`));
         res.status(201).send(results);
       } catch(error) {
-        console.log(error)
         res.status(400).send(error);
       }
     }
@@ -92,8 +91,7 @@ router.route('/signup/candidates')
   .post(upload.none(), async (req, res) => {
     const { password, email, phone } = req.body;
     if (!candidateDataIsValid(req.body))
-      {console.log('non valide')
-        res.status(400).send("données non valides");}
+        res.status(400).send("données non valides");
     else {
       try {
         const hash = await bcrypt.hash(password, 10);
@@ -102,7 +100,6 @@ router.route('/signup/candidates')
         res.status(201).send(result);
       } catch (error) {
         res.sendStatus(400);
-        console.log(error)
       }
     }
   });
@@ -134,7 +131,6 @@ router.route('/newPassword')
       sendEmail(newPassword(email, `http://localhost:3000/newpassword/${token}`));
       res.sendStatus(200);
     } catch (error) {
-      console.log(error);
       res.sendStatus(400);
     }
   })
