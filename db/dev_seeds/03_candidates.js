@@ -13,7 +13,21 @@ exports.seed = function(knex, Promise) {
           password: hash,
           phone: '0612345678',
           is_active: true
-        }
+        },
+        {
+          id: 2,
+          email: 'jean.dufour@yopmail.com',
+          password: hash,
+          phone: '0789653422',
+          is_active: true
+        },
+        {
+          id: 3,
+          email: 'michel.platini@yopmail.com',
+          password: hash,
+          phone: '0134786512',
+          is_active: true
+        },
       ]);
     });
 };
